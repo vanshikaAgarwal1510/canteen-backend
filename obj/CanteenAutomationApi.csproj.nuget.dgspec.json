@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/workspaces/canteen-backend/CanteenAutomationApi/CanteenAutomationApi.csproj": {}
+    "/workspaces/canteen-backend/CanteenAutomationApi.csproj": {}
   },
   "projects": {
-    "/workspaces/canteen-backend/CanteenAutomationApi/CanteenAutomationApi.csproj": {
+    "/workspaces/canteen-backend/CanteenAutomationApi.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/workspaces/canteen-backend/CanteenAutomationApi/CanteenAutomationApi.csproj",
+        "projectUniqueName": "/workspaces/canteen-backend/CanteenAutomationApi.csproj",
         "projectName": "CanteenAutomationApi",
-        "projectPath": "/workspaces/canteen-backend/CanteenAutomationApi/CanteenAutomationApi.csproj",
+        "projectPath": "/workspaces/canteen-backend/CanteenAutomationApi.csproj",
         "packagesPath": "/home/codespace/.nuget/packages/",
-        "outputPath": "/workspaces/canteen-backend/CanteenAutomationApi/obj/",
+        "outputPath": "/workspaces/canteen-backend/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/home/codespace/.nuget/NuGet/NuGet.Config"
@@ -52,9 +52,23 @@
               "target": "Package",
               "version": "[10.0.0, )"
             },
+            "Microsoft.EntityFrameworkCore.SqlServer": {
+              "target": "Package",
+              "version": "[10.0.2, )"
+            },
+            "Microsoft.EntityFrameworkCore.Tools": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[10.0.2, )"
+            },
             "Npgsql.EntityFrameworkCore.PostgreSQL": {
               "target": "Package",
               "version": "[10.0.0, )"
+            },
+            "Swashbuckle.AspNetCore": {
+              "target": "Package",
+              "version": "[10.1.0, )"
             }
           },
           "imports": [
