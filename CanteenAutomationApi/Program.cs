@@ -67,7 +67,7 @@ using (var scope = app.Services.CreateScope())
             FullName = "Admin",
             Email = "admin@canteen.com",
             PasswordHash = PasswordHelper.Hash("1234"),
-            Role = 1
+            RoleId = 1
         });
 
         db.SaveChanges();
