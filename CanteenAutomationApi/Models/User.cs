@@ -1,11 +1,17 @@
-namespace CanteenBackend.Models
+namespace CanteenBackend.Models;
+
+public class User
 {
- public class User
-    {
-        public int Id { get; set; }
-        public string FullName { get; set; }= string.Empty;
-        public string Password { get; set; } = string.Empty;
-        public string Email {get; set; }=string.Empty;
-        public string Role { get; set; } ="User";
-    }   
+    public int Id { get; set; }
+    public required string FullName { get; set; }
+    public required string Email { get; set; }
+    public required string PasswordHash { get; set; }
+    public DateTime CreatedAt { get; set; }
+
+    // Foreign key
+    public int RoleId { get; set; }
+
+    // Navigation
+    public required Role Role { get; set; }
+    public  List<Order>? Orders { get; set; }
 }

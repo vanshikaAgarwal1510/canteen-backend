@@ -10,6 +10,11 @@ namespace CanteenBackend.Data
         {
         }
 
-        public DbSet<User> Users => Set<User>();
+          public DbSet<Role> Roles { get; set; }
+          public DbSet<User> Users { get; set; }
+          public DbSet<MenuCategory> MenuCategories { get; set; }
+          public DbSet<MenuItem> MenuItems { get; set; }
+          public DbSet<Order> Orders { get; set; }
+          public DbSet<OrderItem> OrderItems { get; set; }
     }
 }

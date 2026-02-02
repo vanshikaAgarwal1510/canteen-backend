@@ -1,62 +1,77 @@
-
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CanteenBackend.Data;
+using CanteenBackend.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
+//add services to the container.
+builder.Services.AddControllers();
+
+//add db context(meaning make a connection to the database if any api need db access)
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlite("Data Source=Data/canteen.db")
+);
 
 
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+//add authentication service
+var jwt = builder.Configuration.GetSection("Jwt");
+var key = Encoding.UTF8.GetBytes(jwt["Key"]!);
+
+//“My app supports authentication.”
+builder.Services.AddAuthentication(options =>
+{
+    //“HOW should we authenticate the user?”
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+//define how to validate the token.
+.AddJwtBearer(options =>
+{
+    //“When I receive a token, how do I decide if it is valid?”
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,//“Only accept tokens created by MY server.”
+        ValidateAudience = true,//“This token must be meant for THIS application.”
+        ValidateLifetime = true,//“Reject expired tokens.”
+        ValidateIssuerSigningKey = true,//“Verify token signature using my secret key.”
+        ValidIssuer = jwt["Issuer"],
+        ValidAudience = jwt["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(key)//This is the secret key used to: verify token signature ensure token was issued by YOU If someone changes token payload → signature breaks → ❌ rejected
+    };
+});
 
 var app = builder.Build();
 
-app.UseSwagger();
-app.UseSwaggerUI();
+app.MapControllers();
+//“Check WHO the user is.”
+app.UseAuthentication();
+//“Check WHAT the user is allowed to do.”
+app.UseAuthorization();
 
-app.MapPost("/login", (LoginRequest request, AppDbContext db) =>
+
+using (var scope = app.Services.CreateScope())
 {
-    var user= db.Users.FirstOrDefault(u=> u.Email==request.Email && u.Password==request.Password);
-    if (user != null)
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+    db.Database.EnsureCreated();
+
+    if (!db.Users.Any())
     {
-         return Results.Ok(new
+      
+        db.Users.Add(new User
         {
-            message = "Login successful",
-            role = user.Role
+            FullName = "Admin",
+            Email = "admin@canteen.com",
+            PasswordHash = PasswordHelper.Hash("1234"),
+            Role = 1
         });
+
+        db.SaveChanges();
     }
-    else
-    {
-        return Results.Unauthorized();   
-    }
- 
-});
-
-
-app.MapGet("/weatherforecast", () =>
-{
-    var summaries = new[]
-    {
-        "Freezing", "Bracing", "Chilly", "Cool", "Mild",
-        "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-    };
-
-    return Enumerable.Range(1, 5).Select(index =>
-        new
-        {
-            Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            TemperatureC = Random.Shared.Next(-20, 55),
-            Summary = summaries[Random.Shared.Next(summaries.Length)]
-        });
-});
-
-
-
-
+}
 
 app.Run();
-
-record LoginRequest(string Email, string Password);
