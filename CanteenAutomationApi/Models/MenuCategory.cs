@@ -6,5 +6,5 @@ public class MenuCategory
     public required string Name { get; set; }
 
     // Navigation
-    public required List<MenuItem> Items { get; set; }
+    public  List<MenuItem> Items { get; set; } = new List<MenuItem>();
 }

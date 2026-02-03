@@ -12,5 +12,5 @@ public class MenuItem
 
     // Navigation
     public required MenuCategory Category { get; set; }
-    public required List<OrderItem> OrderItems { get; set; }
+    public  List<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
 }

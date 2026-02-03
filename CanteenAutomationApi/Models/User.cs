@@ -12,6 +12,6 @@ public class User
     public int RoleId { get; set; }
 
     // Navigation
-    public required Role Role { get; set; }
+    public  Role Role { get; set; }= null!;
     public  List<Order>? Orders { get; set; }
 }

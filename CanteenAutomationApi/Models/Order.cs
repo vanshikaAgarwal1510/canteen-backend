@@ -8,9 +8,9 @@ public class Order
     public DateTime CreatedAt { get; set; }
 
     // Foreign key
-    public int UserId { get; set; }
+    public required int UserId { get; set; }
 
     // Navigation
-    public required User User { get; set; }
+    public  User User { get; set; }= null!;
     public required List<OrderItem> Items { get; set; }
 }

@@ -24,11 +24,17 @@ public IActionResult Login(LoginRequest request)
         .FirstOrDefault(u => u.Email == request.Email);
 
     // 2️⃣ Validate credentials
-    if (dbUser == null ||
-        !PasswordHelper.Verify(request.Password, dbUser.PasswordHash))
-    {
-        return Unauthorized("Invalid email or password");
-    }
+     if (dbUser == null ||
+         !PasswordHelper.Verify(request.Password, dbUser.PasswordHash))
+     {
+         return Unauthorized(new
+         {
+             status = 401,
+             message = "Invalid email or password",
+             data = (object?)null
+         });
+     }
+
 
     // 3️⃣ Generate JWT
     var jwtToken = JwtHelper.GenerateToken(dbUser, _config);
@@ -36,13 +42,17 @@ public IActionResult Login(LoginRequest request)
     // 4️⃣ Return response
     return Ok(new
     {
-        token = jwtToken,
-        user = new
+        status = 200,
+        message = "Login successful",
+        data = new
         {
-            dbUser.Id,
+           user = new
+         {
             dbUser.FullName,
             dbUser.Email,
-            Role = dbUser.Role.Name
+            Role = dbUser.Role.Name,        
+         },
+        token = jwtToken,
         }
     });
 }}

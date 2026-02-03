@@ -10,7 +10,8 @@ public class OrderItem
     public int OrderId { get; set; }
     public int ItemId { get; set; }
 
-    // Navigation
-    public required Order Order { get; set; }
-    public required MenuItem Item { get; set; }
+    // Navigation 
+    public Order? Order { get; set; }
+    public MenuItem? Item { get; set; }
 }
+
