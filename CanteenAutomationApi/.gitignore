@@ -22,3 +22,9 @@ Thumbs.db
 ## Environment files
 .env
 
+## Database files
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+

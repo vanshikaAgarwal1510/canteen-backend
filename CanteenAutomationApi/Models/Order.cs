@@ -13,4 +13,5 @@ public class Order
     // Navigation
     public  User User { get; set; }= null!;
     public required List<OrderItem> Items { get; set; }
+     public Payment? Payment { get; set; }
 }

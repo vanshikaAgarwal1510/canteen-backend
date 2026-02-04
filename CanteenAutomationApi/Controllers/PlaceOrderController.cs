@@ -6,8 +6,7 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 
 
-[Authorize]
-[ApiController]
+
 [Route("api/place-order")]
 public class PlaceOrderController : ControllerBase
 {
@@ -29,7 +28,7 @@ public class PlaceOrderController : ControllerBase
                 message = "Order must contain at least one item",
                 data = (object?)null
             });
-        }
+        }else{
          var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
          if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
          {
@@ -49,8 +48,6 @@ public class PlaceOrderController : ControllerBase
             Status = "Pending"
         };
 
-        _db.Orders.Add(order);
-        await _db.SaveChangesAsync();
 
          decimal totalAmount = 0;
 
@@ -82,13 +79,32 @@ public class PlaceOrderController : ControllerBase
             _db.OrderItems.Add(orderItem);
         }
 
-        // 4️ Update total amount
+        // Update total amount
+
         order.Total = totalAmount;
+        _db.Orders.Add(order);
+
+        await _db.SaveChangesAsync();
+
+        var payment = new Payment
+        {
+            OrderId = order.Id,
+            PaymentMode = request.PaymentMethod,
+            PaymentStatus =
+                request.PaymentMethod == 1
+                    ? "Pending"
+                    : "Paid",
+            PaidAt =
+                request.PaymentMethod == 1
+                    ? null
+                    : DateTime.Now
+        };
+
+
+        _db.Payments.Add(payment);
         await _db.SaveChangesAsync();
 
 
-
-       
        return Ok(new
        {
              status = 200,
@@ -98,17 +114,19 @@ public class PlaceOrderController : ControllerBase
           {
               orderId = order.Id,
               status = order.Status,
-              totalAmount = order.Total
+              totalAmount = order.Total,
+              paymentStatus = payment.PaymentStatus
           },
           }
          });
-      }
+      }}
 }
 
 
 public class PlaceOrderRequest
 {
     public List<OrderItemRequest> Items { get; set; } = new();
+    public int PaymentMethod { get; set; }
 }
 public class OrderItemRequest
 {

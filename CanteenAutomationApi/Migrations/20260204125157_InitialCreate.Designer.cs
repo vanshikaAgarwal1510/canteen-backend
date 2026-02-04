@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CanteenAutomationApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260202110251_InitialSchema")]
-    partial class InitialSchema
+    [Migration("20260204125157_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -114,6 +114,33 @@ namespace CanteenAutomationApi.Migrations
                     b.ToTable("OrderItems");
                 });
 
+            modelBuilder.Entity("CanteenBackend.Models.Payment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("PaidAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("PaymentMode")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("PaymentStatus")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId")
+                        .IsUnique();
+
+                    b.ToTable("Payments");
+                });
+
             modelBuilder.Entity("CanteenBackend.Models.Role", b =>
                 {
                     b.Property<int>("Id")
@@ -201,6 +228,17 @@ namespace CanteenAutomationApi.Migrations
                     b.Navigation("Order");
                 });
 
+            modelBuilder.Entity("CanteenBackend.Models.Payment", b =>
+                {
+                    b.HasOne("CanteenBackend.Models.Order", "Order")
+                        .WithOne("Payment")
+                        .HasForeignKey("CanteenBackend.Models.Payment", "OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+                });
+
             modelBuilder.Entity("CanteenBackend.Models.User", b =>
                 {
                     b.HasOne("CanteenBackend.Models.Role", "Role")
@@ -225,6 +263,8 @@ namespace CanteenAutomationApi.Migrations
             modelBuilder.Entity("CanteenBackend.Models.Order", b =>
                 {
                     b.Navigation("Items");
+
+                    b.Navigation("Payment");
                 });
 
             modelBuilder.Entity("CanteenBackend.Models.Role", b =>
