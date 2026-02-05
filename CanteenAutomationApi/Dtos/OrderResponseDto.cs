@@ -5,6 +5,7 @@ public class OrderResponseDto
     public string Status { get; set; }= null!;
     public decimal TotalAmount { get; set; }
     public string? PaymentStatus { get; set; }
+    public int OrderType { get; set; }
 
     // User info
     public int UserId { get; set; }

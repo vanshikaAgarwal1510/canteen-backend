@@ -18,12 +18,12 @@ public class LoginController : ControllerBase
     [HttpPost]
 public IActionResult Login(LoginRequest request)
 {
-    // 1️⃣ Get user from DB
+    //  Get user from DB
     var dbUser = _db.Users
         .Include(u => u.Role)
         .FirstOrDefault(u => u.Email == request.Email);
 
-    // 2️⃣ Validate credentials
+    //  Validate credentials
      if (dbUser == null ||
          !PasswordHelper.Verify(request.Password, dbUser.PasswordHash))
      {
@@ -36,10 +36,13 @@ public IActionResult Login(LoginRequest request)
      }
 
 
-    // 3️⃣ Generate JWT
+    //  Generate JWT
     var jwtToken = JwtHelper.GenerateToken(dbUser, _config);
 
-    // 4️⃣ Return response
+    dbUser.IsActive = true;
+    _db.SaveChanges();
+
+    //  Return response
     return Ok(new
     {
         status = 200,

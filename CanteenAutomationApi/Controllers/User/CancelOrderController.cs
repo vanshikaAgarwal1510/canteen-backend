@@ -18,7 +18,7 @@ public class CancelOrderController : ControllerBase
         _db = db;
     }
 
-    [HttpPut]
+    [HttpPost]
     public async Task<IActionResult> CancelOrder(CancelOrderRequest request )
     {
          var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

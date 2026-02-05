@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 //add services to the container.
@@ -47,12 +48,14 @@ builder.Services.AddAuthentication(options =>
 var app = builder.Build();
 
 app.MapControllers();
+app.UseStaticFiles();
+
 //“Check WHO the user is.”
 app.UseAuthentication();
 //“Check WHAT the user is allowed to do.”
 app.UseAuthorization();
 
-
+app.UseStaticFiles();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();

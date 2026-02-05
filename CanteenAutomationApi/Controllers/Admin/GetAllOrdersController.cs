@@ -5,19 +5,21 @@ using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 
 
-[Authorize(Roles ="Admin")]
+
 [ApiController]
 [Route("api/get-orders")]
-public class GetAllOrdersController : ControllerBase
+public class GetOrdersController : ControllerBase
 {
      private readonly AppDbContext _db;
 
-    public GetAllOrdersController(AppDbContext db)
+    public GetOrdersController(AppDbContext db)
     {
         _db = db;
     }
-    [HttpPost]
-    public async Task<IActionResult> GetOrders([FromBody] FilteredOrdersRequest request)
+  
+   [Authorize(Roles ="Admin")]
+    [HttpPost("all")]
+    public async Task<IActionResult> GetAllOrders([FromBody] FilteredOrdersRequest request)
     {
 
         var ordersQuery = _db.Orders.AsQueryable();
@@ -50,6 +52,7 @@ public class GetAllOrdersController : ControllerBase
                 Status = o.Status,
                 TotalAmount = o.Total,
                 PaymentStatus = o.Payment != null ? o.Payment.PaymentStatus : "Pending",
+                OrderType = o.OrderType,
 
                 UserId = o.User.Id,
                 UserName = o.User.FullName,
@@ -71,10 +74,54 @@ public class GetAllOrdersController : ControllerBase
             data = orders
         });
     }
+
+    [Authorize(Roles ="Staff")]
+    [HttpPost("active")]
+    public async Task<IActionResult> GetActiveOrders()
+    {
+       var orders = await _db.Orders
+    .Where(o => o.Status != "Completed" && o.Status != "Cancelled")
+    .Include(o => o.User)
+    .Include(o => o.Payment)        
+    .Include(o => o.Items)
+        .ThenInclude(oi => oi.Item)
+    .OrderByDescending(o => o.CreatedAt)
+    .Select(o => new OrderResponseDto
+    {
+        OrderId = o.Id,
+        OrderDate = o.CreatedAt,
+        Status = o.Status,
+        TotalAmount = o.Total,
+        PaymentStatus = o.Payment != null ? o.Payment.PaymentStatus : "Pending",
+        OrderType = o.OrderType,
+
+        UserId = o.User.Id,
+        UserName = o.User.FullName,
+
+        Items = o.Items.Select(oi => new OrderItemDto
+        {
+            ItemId = oi.ItemId,
+            ItemName = oi.Item!.Name,
+            Quantity = oi.Quantity,
+            Price = oi.Price
+        }).ToList()
+    })
+    .ToListAsync();
+
+
+        return Ok(new
+        {
+            status = 200,
+            message = "Orders fetched successfully",
+            data = orders
+        });
+    }
+
+
 }
 public class FilteredOrdersRequest
 {
-    public string Status { get; set; } = string.Empty;
+     public string Status { get; set; } = string.Empty;
     public DateTime? FromDate { get; set; } = null;
     public DateTime? ToDate { get; set; }= null;
 

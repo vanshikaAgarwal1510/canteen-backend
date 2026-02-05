@@ -16,7 +16,7 @@ public class OrdersController : ControllerBase
         _db = db;
     }
     [HttpPut("update-status")]
-    public IActionResult UpdateOrder(UpdateOrderRequest request)
+    public IActionResult UpdateOrderStatus(UpdateOrderRequest request)
 
     {
        var order =  _db.Orders.FirstOrDefault(o => o.Id == request.OrderId);
@@ -77,6 +77,46 @@ public class OrdersController : ControllerBase
         }
         });
     }
+   
+    [HttpPut("mark-payment-paid")]
+     public IActionResult UpdatePaymentStatus(int orderId)
+
+    {
+       var payment =  _db.Payments.FirstOrDefault(o => o.OrderId == orderId);
+       if(payment == null)
+       {
+        return NotFound(new
+        {
+            status = 404,
+            message = "Payment record not found",
+            data = (object?)null
+        });
+       }
+
+     if( payment.PaymentStatus == "Paid"){
+        return BadRequest(new
+        {
+            status = 400,
+            message = "Payment is already marked as paid",
+            data = (object?)null
+        });
+    }
+        payment.PaymentStatus = "Paid";
+        payment.PaidAt = DateTime.UtcNow;
+            _db.SaveChanges();
+
+
+        return Ok(new
+        {
+            status = 200,
+            message = "Payment status updated successfully",
+             data =  new{   
+                PaymentId = payment.Id,
+                NewStatus = payment.PaymentStatus
+        }
+        });
+    }
+
 
 }
 

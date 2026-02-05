@@ -6,6 +6,8 @@ public class MenuItem
     public required string Name { get; set; }
     public decimal Price { get; set; }
     public bool IsAvailable { get; set; }
+    public string? ImageUrl { get; set; }
+    public bool IsDeleted { get; set; } = false;
 
     // Foreign key
     public int CategoryId { get; set; }

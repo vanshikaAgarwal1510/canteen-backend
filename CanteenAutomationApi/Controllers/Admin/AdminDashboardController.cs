@@ -18,7 +18,7 @@ public class AdminDashboardController : ControllerBase
 
    
     [HttpPost]
-     public async Task<IActionResult> GetData()
+     public IActionResult GetData()
     {
 
     var today = DateTime.Today;

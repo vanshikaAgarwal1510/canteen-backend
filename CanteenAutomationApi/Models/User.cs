@@ -1,5 +1,6 @@
 namespace CanteenBackend.Models;
 
+
 public class User
 {
     public int Id { get; set; }
@@ -8,6 +9,10 @@ public class User
     public required string PasswordHash { get; set; }
     public DateTime CreatedAt { get; set; }
 
+   public int? StaffType { get; set; } //1 fullTime, 2 part-time, 3 contract
+
+    public bool IsActive { get; set; }
+
     // Foreign key
     public int RoleId { get; set; }
 
@@ -15,3 +20,4 @@ public class User
     public  Role Role { get; set; }= null!;
     public  List<Order>? Orders { get; set; }
 }
+

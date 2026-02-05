@@ -45,6 +45,7 @@ public class GetMyOrderController : ControllerBase
                 Status = o.Status,
                 TotalAmount = o.Total,
                 PaymentStatus = o.Payment != null ? o.Payment.PaymentStatus : "Pending",
+                OrderType = o.OrderType,
 
                 UserId = o.User.Id,
                 UserName = o.User.FullName,
