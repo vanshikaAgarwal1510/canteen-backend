@@ -50,7 +50,7 @@ public class GetOrdersController : ControllerBase
                 OrderId = o.Id,
                 OrderDate = o.CreatedAt,
                 Status = o.Status,
-                TotalAmount = o.Total,
+                TotalAmount = o.FinalAmount,
                 PaymentStatus = o.Payment != null ? o.Payment.PaymentStatus : "Pending",
                 OrderType = o.OrderType,
 
@@ -91,7 +91,7 @@ public class GetOrdersController : ControllerBase
         OrderId = o.Id,
         OrderDate = o.CreatedAt,
         Status = o.Status,
-        TotalAmount = o.Total,
+        TotalAmount = o.FinalAmount,
         PaymentStatus = o.Payment != null ? o.Payment.PaymentStatus : "Pending",
         OrderType = o.OrderType,
 

@@ -61,6 +61,20 @@ public class CancelOrderController : ControllerBase
                  data = (object?)null
             });
             }
+
+           var payment = _db.Payments.Where(p => p.OrderId == order.Id).FirstOrDefault();
+
+           if(payment !=null && payment.PaymentMode != 1) 
+             {
+               var user = _db.Users.Find(userId);
+               if(user != null)
+               {
+                   user.WalletBalance += order.FinalAmount;
+                   payment.PaymentStatus = "Refunded";
+               }
+         
+             }
+        
             order.Status = "Cancelled";
             await _db.SaveChangesAsync();
 

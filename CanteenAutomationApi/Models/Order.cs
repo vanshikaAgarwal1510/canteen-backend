@@ -4,8 +4,11 @@ public class Order
 {
     public int Id { get; set; }
     public required string Status { get; set; }
-    public decimal Total { get; set; }
+    public decimal FinalAmount { get; set; }
     public DateTime CreatedAt { get; set; }
+    public decimal Discount { get; set; }
+    public decimal SubTotal { get; set; }
+
 
     public int OrderType{get; set;} // 1= Dine-In, 2= Takeaway,
     

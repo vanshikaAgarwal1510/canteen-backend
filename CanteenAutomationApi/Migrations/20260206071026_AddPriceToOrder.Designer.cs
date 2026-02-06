@@ -3,6 +3,7 @@ using System;
 using CanteenBackend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CanteenAutomationApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260206071026_AddPriceToOrder")]
+    partial class AddPriceToOrder
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.4");
@@ -203,9 +206,6 @@ namespace CanteenAutomationApi.Migrations
 
                     b.Property<int?>("StaffType")
                         .HasColumnType("INTEGER");
-
-                    b.Property<decimal>("WalletBalance")
-                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 

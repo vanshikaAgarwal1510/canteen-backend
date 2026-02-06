@@ -4,8 +4,8 @@ public class Payment
 {
     public int Id { get; set; }
     public int OrderId { get; set; }
-    public int PaymentMode { get; set; } // e.g., 1 = counter, 2 = phonepay, 3 =paytm, 4=googlePay etc.
-    public string PaymentStatus { get; set; } = null!; // e.g., "Pending", "Paid",
+    public int PaymentMode { get; set; } // e.g., 1 = counter, 2 = phonepay, 3 =paytm, 4=googlePay  5 = wallet etc.
+    public string PaymentStatus { get; set; } = null!; // e.g., "Pending", "Paid","Refunded"
     public DateTime? PaidAt { get; set; }
 
     // Navigation

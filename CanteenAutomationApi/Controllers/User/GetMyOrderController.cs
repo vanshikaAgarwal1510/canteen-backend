@@ -43,7 +43,7 @@ public class GetMyOrderController : ControllerBase
                 OrderId = o.Id,
                 OrderDate = o.CreatedAt,
                 Status = o.Status,
-                TotalAmount = o.Total,
+                TotalAmount = o.FinalAmount,
                 PaymentStatus = o.Payment != null ? o.Payment.PaymentStatus : "Pending",
                 OrderType = o.OrderType,
 
@@ -67,4 +67,62 @@ public class GetMyOrderController : ControllerBase
             data = orders
         });
     }
+
+   [HttpPost("details")]
+    public async Task<IActionResult> GetOrderDetails([FromBody] OrderDetailsRequest request)
+    {
+         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+         if(string.IsNullOrEmpty(userIdClaim)) 
+             return Unauthorized(new
+             {
+                 status = 401,
+                 message = "Invalid or missing user ID",
+                 data = (object?)null
+             });
+         int userId = int.Parse(userIdClaim);
+
+        var orders = await _db.Orders
+            .Where(o => o.UserId == userId && o.Id == request.OrderId)
+            .Include(o => o.User)
+            .Include(o => o.Payment)
+            .Include(o => o.Items)
+                .ThenInclude(oi => oi.Item)
+            .OrderByDescending(o => o.CreatedAt)
+            .Select(o => new OrderResponseDto
+            {
+                OrderId = o.Id,
+                OrderDate = o.CreatedAt,
+                Status = o.Status,
+                TotalAmount = o.FinalAmount,
+                PaymentStatus = o.Payment != null ? o.Payment.PaymentStatus : "Pending",
+                OrderType = o.OrderType,
+                Discount = o.Discount,
+                SubTotal = o.SubTotal,
+
+                UserId = o.User.Id,
+                UserName = o.User.FullName,
+
+                Items = o.Items.Select(oi => new OrderItemDto
+                {
+                    ItemId = oi.ItemId,
+                    ItemName = oi.Item!.Name,
+                    Quantity = oi.Quantity,
+                    Price = oi.Price
+                }).ToList()
+            })
+            .FirstOrDefaultAsync();
+
+        return Ok(new
+        {
+            status = 200,
+            message = "Orders fetched successfully",
+            data = orders
+        });
+    }
+
 }
+public class OrderDetailsRequest
+{
+    public int OrderId { get; set; }
+}
+

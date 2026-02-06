@@ -33,7 +33,7 @@ public class AdminDashboardController : ControllerBase
 
     var todayRevenue = todayOrders
         .Where(o => o.Status == "Completed")
-        .Sum(o => (decimal?)o.Total) ?? 0;
+        .Sum(o => (decimal?)o.FinalAmount) ?? 0;
 
     var items = _db.OrderItems
     .Include(oi => oi.Item)
@@ -66,14 +66,14 @@ public class AdminDashboardController : ControllerBase
     var totalMonthlyOrders = monthlyOrders.Count();
 
     var totalMonthlyRevenue = monthlyOrders
-        .Sum(o => (decimal?)o.Total) ?? 0;
+        .Sum(o => (decimal?)o.FinalAmount) ?? 0;
 
       var chartData =monthlyOrders
      .GroupBy(o => o.CreatedAt.Date)
      .Select(g => new
      {
          date = g.Key.ToString("dd MMM"),
-         revenue = g.Sum(x => x.Total)
+         revenue = g.Sum(x => x.FinalAmount)
      })
      .OrderBy(x => x.date)
      .ToList();

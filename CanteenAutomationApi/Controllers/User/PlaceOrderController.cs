@@ -2,7 +2,6 @@ using System.Security.Claims;
 using CanteenBackend.Data;
 using CanteenBackend.Models;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -44,8 +43,8 @@ public class PlaceOrderController : ControllerBase
     }
 
     
-    var userExists = await _db.Users.AnyAsync(u => u.Id == userId);
-    if (!userExists)
+    var userData = await _db.Users.FindAsync(userId);
+     if (userData == null)
     {
         return Unauthorized(new
         {
@@ -55,7 +54,10 @@ public class PlaceOrderController : ControllerBase
         });
     }
 
- 
+    decimal totalAmount = 0;
+    decimal discount = 0;
+    decimal subTotal = 0;
+
     var order = new Order
     {
         UserId = userId,
@@ -66,9 +68,6 @@ public class PlaceOrderController : ControllerBase
 
     _db.Orders.Add(order);
     await _db.SaveChangesAsync(); 
-
-    decimal totalAmount = 0;
-
   
     foreach (var itemRequest in request.Items)
     {
@@ -94,7 +93,31 @@ public class PlaceOrderController : ControllerBase
         }
 
         var itemTotal = menuItem.Price * itemRequest.Quantity;
-        totalAmount += itemTotal;
+        subTotal += itemTotal;
+
+
+         if (!string.IsNullOrEmpty(request.CouponCode) )
+        {
+            
+            var coupon = _db.Coupons
+                .FirstOrDefault(c =>
+                    c.Code == request.CouponCode.ToUpper() &&
+                    c.IsActive &&
+                    c.ExpiryDate > DateTime.UtcNow);
+        
+            if (coupon == null)
+                return BadRequest("Invalid or expired coupon");
+        
+            if (subTotal < coupon.MinOrderAmount)
+                return BadRequest("Order amount too low for this coupon");
+        
+            if (coupon.DiscountType == "FLAT")
+                discount = coupon.DiscountValue;
+            else if (coupon.DiscountType == "PERCENT")
+                discount = subTotal * (coupon.DiscountValue / 100);
+        }
+           totalAmount = subTotal - discount;
+        
 
         var orderItem = new OrderItem
         {
@@ -107,7 +130,9 @@ public class PlaceOrderController : ControllerBase
         _db.OrderItems.Add(orderItem);
     }
 
-    order.Total = totalAmount;
+    order.FinalAmount = totalAmount;
+    order.Discount = discount;
+    order.SubTotal = subTotal;
     await _db.SaveChangesAsync();
 
   
@@ -118,6 +143,20 @@ public class PlaceOrderController : ControllerBase
         PaymentStatus = request.PaymentMethod == 1 ? "Pending" : "Paid",
         PaidAt = request.PaymentMethod == 1 ? null : DateTime.UtcNow
     };
+
+    if(payment.PaymentMode == 5) 
+    {
+        if(userData.WalletBalance < totalAmount)
+        {
+            return BadRequest(new
+            {
+                status = 400,
+                message = "Insufficient wallet balance",
+                data = (object?)null
+            });
+        }
+        userData.WalletBalance -= totalAmount;
+    }
 
     _db.Payments.Add(payment);
     await _db.SaveChangesAsync();
@@ -130,7 +169,9 @@ public class PlaceOrderController : ControllerBase
         {
             orderId = order.Id,
             status = order.Status,
-            totalAmount = order.Total,
+            totalAmount = order.FinalAmount,
+            discount = order.Discount,
+            subTotal = order.SubTotal,
             paymentStatus = payment.PaymentStatus
         }
     });
@@ -142,6 +183,7 @@ public class PlaceOrderRequest
     public List<OrderItemRequest> Items { get; set; } = new();
     public int PaymentMethod { get; set; } // 1= cash, 2= phonepay, 3=paytm, 4=googlePay etc.
      public int OrderType{get; set;} // 1= Dine-In, 2= Takeaway,
+     public string? CouponCode{get; set;}
 
 }
 public class OrderItemRequest

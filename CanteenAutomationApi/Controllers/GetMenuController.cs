@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using CanteenBackend.Data;
-using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 
 [Authorize]
@@ -34,8 +34,9 @@ public class MenuController : ControllerBase
                     ItemName = i.Name,
                     Price = i.Price,
                     IsAvailable = i.IsAvailable,
-                    ImageUrl = i.ImageUrl
-                }).ToList()
+                    ImageUrl = i.ImageUrl,
+                    AverageRating = _db.Ratings.Where(r => r.ItemId == i.Id).Average(r => (decimal?)r.Stars) ?? 0,
+                      }).ToList()
             }) .ToListAsync();
 
         return Ok(new
@@ -61,5 +62,9 @@ class MenuItemDto
     public decimal Price { get; set; }
     public bool IsAvailable { get; set; }
     public string? ImageUrl { get; set; }
+    public decimal AverageRating { get; set; }
+
+
+
 }
 

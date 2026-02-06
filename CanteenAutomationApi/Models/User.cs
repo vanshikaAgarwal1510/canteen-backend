@@ -13,6 +13,9 @@ public class User
 
     public bool IsActive { get; set; }
 
+    public decimal WalletBalance { get; set; } = 0;
+
+
     // Foreign key
     public int RoleId { get; set; }
 

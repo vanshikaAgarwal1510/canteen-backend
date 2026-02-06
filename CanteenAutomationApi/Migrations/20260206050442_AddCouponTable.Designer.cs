@@ -3,6 +3,7 @@ using System;
 using CanteenBackend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CanteenAutomationApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260206050442_AddCouponTable")]
+    partial class AddCouponTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.4");
@@ -79,12 +82,6 @@ namespace CanteenAutomationApi.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<decimal>("Discount")
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal>("FinalAmount")
-                        .HasColumnType("TEXT");
-
                     b.Property<int>("OrderType")
                         .HasColumnType("INTEGER");
 
@@ -92,7 +89,7 @@ namespace CanteenAutomationApi.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<decimal>("SubTotal")
+                    b.Property<decimal>("Total")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("UserId")
@@ -203,9 +200,6 @@ namespace CanteenAutomationApi.Migrations
 
                     b.Property<int?>("StaffType")
                         .HasColumnType("INTEGER");
-
-                    b.Property<decimal>("WalletBalance")
-                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
