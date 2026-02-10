@@ -75,9 +75,10 @@ public class RatingsController : ControllerBase
 
                 var rating = _db.Ratings.FirstOrDefault(r =>
                 r.OrderId == request.OrderId &&
-                r.ItemId == request.ItemId &&
+                r.MenuItemId == request.ItemId &&
                 r.UserId == userId
             );
+
             if (rating != null)
             {
                 rating.Stars = request.Stars;
@@ -88,9 +89,10 @@ public class RatingsController : ControllerBase
                 var ratingNew = new Rating
              {
                  UserId = userId,
-                 ItemId = request.ItemId,
+                 MenuItemId = request.ItemId, 
                  OrderId = request.OrderId,
                  Stars = request.Stars,
+                 CreatedAt=DateTime.UtcNow
              };
             _db.Ratings.Add(ratingNew);
              }   

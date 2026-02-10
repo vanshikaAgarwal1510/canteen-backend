@@ -6,10 +6,11 @@ using System;
         public string Status { get; set; }= null!;
         public decimal TotalAmount { get; set; }
 
-        public decimal Discount { get; set; }
-        public decimal SubTotal { get; set; }
+        public decimal? Discount { get; set; }
+        public decimal? SubTotal { get; set; }
         public string? PaymentStatus { get; set; }
         public int OrderType { get; set; }
+        public string? PickupCode { get; set; }
 
         // User info
         public int UserId { get; set; }
@@ -31,6 +32,7 @@ public class UpdateOrderRequest
 {
     public int OrderId { get; set; }
     public string NewStatus { get; set; } = null!;
+    public string? PickupCode { get; set; }
 }
 
 

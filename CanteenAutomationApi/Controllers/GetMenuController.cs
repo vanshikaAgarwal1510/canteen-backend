@@ -19,7 +19,21 @@ public class MenuController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> GetMenu()
     {
+        // 1️⃣ Fetch ratings safely (SQLite-compatible)
+        var ratingList = await _db.Ratings
+            .GroupBy(r => r.MenuItemId)
+            .Select(g => new
+            {
+                MenuItemId = g.Key,
+                AvgRating = g.Average(r => (double)r.Stars),
+                RatingCount = g.Count()
+            })
+            .ToListAsync();
 
+        var ratingLookup = ratingList
+            .ToDictionary(x => x.MenuItemId);
+
+        // 2️⃣ Fetch menu with categories & items
         var menu = await _db.MenuCategories
             .Where(c => !c.IsDeleted)
             .Include(c => c.Items)
@@ -28,16 +42,21 @@ public class MenuController : ControllerBase
                 CategoryId = c.Id,
                 CategoryName = c.Name,
                 ImageUrl = c.ImageUrl,
-                Items = c.Items.Where(i => !i.IsDeleted).Select(i => new MenuItemDto
-                {
-                    ItemId = i.Id,
-                    ItemName = i.Name,
-                    Price = i.Price,
-                    IsAvailable = i.IsAvailable,
-                    ImageUrl = i.ImageUrl,
-                    AverageRating = _db.Ratings.Where(r => r.ItemId == i.Id).Average(r => (decimal?)r.Stars) ?? 0,
-                      }).ToList()
-            }) .ToListAsync();
+
+                Items = c.Items
+                    .Where(i => !i.IsDeleted)
+                    .Select(i => new MenuItemDto
+                    {
+                        ItemId = i.Id,
+                        ItemName = i.Name,
+                        Price = i.Price,
+                        IsAvailable = i.IsAvailable,
+                        ImageUrl = i.ImageUrl,
+                        AverageRating = ratingLookup.ContainsKey(i.Id) ? Math.Round(ratingLookup[i.Id].AvgRating, 1): 0
+                    })
+                    .ToList()
+            })
+            .ToListAsync();
 
         return Ok(new
         {
@@ -46,7 +65,7 @@ public class MenuController : ControllerBase
             data = menu
         });
     }
-}
+
 class MenuCategoryDto
 {
     public int CategoryId { get; set; }
@@ -62,9 +81,10 @@ class MenuItemDto
     public decimal Price { get; set; }
     public bool IsAvailable { get; set; }
     public string? ImageUrl { get; set; }
-    public decimal AverageRating { get; set; }
+    public double AverageRating { get; set; }
 
 
 
+}
 }
 

@@ -9,6 +9,9 @@ public class Order
     public decimal Discount { get; set; }
     public decimal SubTotal { get; set; }
 
+     public string PickupCode { get; set; } = null!;
+    public bool IsPickedUp { get; set; } = false;
+
 
     public int OrderType{get; set;} // 1= Dine-In, 2= Takeaway,
     

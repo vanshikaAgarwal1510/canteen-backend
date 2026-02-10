@@ -98,6 +98,7 @@ public class GetMyOrderController : ControllerBase
                 OrderType = o.OrderType,
                 Discount = o.Discount,
                 SubTotal = o.SubTotal,
+                PickupCode = o.IsPickedUp ? null : o.PickupCode, // Only show if picked up
 
                 UserId = o.User.Id,
                 UserName = o.User.FullName,
