@@ -21,6 +21,15 @@ public class GetOrdersController : ControllerBase
     [HttpPost("all")]
     public async Task<IActionResult> GetAllOrders([FromBody] FilteredOrdersRequest request)
     {
+            if (request.ApiKey != Constants.api)
+            {
+                return Unauthorized(new
+                {
+                    status = 401,
+                    message = "An invalid API key was provided",
+                    data = (object?)null
+                });
+            }
 
         var ordersQuery = _db.Orders.AsQueryable();
 
@@ -29,15 +38,22 @@ public class GetOrdersController : ControllerBase
             ordersQuery = ordersQuery.Where(o => o.Status == request.Status);
         }
 
+        if (request.OrderType.HasValue)
+        {
+            ordersQuery = ordersQuery.Where(o => o.OrderType == request.OrderType.Value);
+        }
+
+        if (!string.IsNullOrEmpty(request.PaymentStatus))
+        {
+            ordersQuery = ordersQuery.Where(o => o.Payment != null && o.Payment.PaymentStatus == request.PaymentStatus);
+        }
+
         if (request.FromDate.HasValue)
         {
             ordersQuery = ordersQuery.Where(o => o.CreatedAt >= request.FromDate.Value);
         }
 
-        if (request.ToDate.HasValue)
-        {
-            ordersQuery = ordersQuery.Where(o => o.CreatedAt <= request.ToDate.Value);
-        }
+    
 
         var orders = await ordersQuery
             .Include(o => o.User)
@@ -121,8 +137,10 @@ public class GetOrdersController : ControllerBase
 }
 public class FilteredOrdersRequest
 {
+    public required string ApiKey { get; set; }
      public string Status { get; set; } = string.Empty;
     public DateTime? FromDate { get; set; } = null;
-    public DateTime? ToDate { get; set; }= null;
+     public int? OrderType{get; set;} =null;
+     public string? PaymentStatus { get; set; } = null!;
 
 }

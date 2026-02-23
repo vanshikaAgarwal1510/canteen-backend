@@ -18,6 +18,17 @@ public class LoginController : ControllerBase
     [HttpPost]
 public IActionResult Login(LoginRequest request)
 {
+
+     if (request.ApiKey != Constants.api)
+         {
+             return Unauthorized(new
+             {
+                 status = 401,
+                 message = "An invalid API key was provided",
+                 data = (object?)null
+             });
+         }
+
     //  Get user from DB
     var dbUser = _db.Users
         .Include(u => u.Role)
@@ -62,6 +73,7 @@ public IActionResult Login(LoginRequest request)
 
     public class LoginRequest
 {
+     public required string ApiKey { get; set; }
     public required string Email { get; set; }
     public required string Password { get; set; }
 }

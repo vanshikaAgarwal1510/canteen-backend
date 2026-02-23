@@ -9,6 +9,18 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFlutterWeb",
+        policy =>
+        {
+            policy
+                .AllowAnyOrigin()
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
+});
+
 //add services to the container.
 builder.Services.AddControllers();
 
@@ -47,6 +59,7 @@ builder.Services.AddAuthentication(options =>
 
 var app = builder.Build();
 
+app.UseCors("AllowFlutterWeb"); 
 app.MapControllers();
 app.UseStaticFiles();
 
