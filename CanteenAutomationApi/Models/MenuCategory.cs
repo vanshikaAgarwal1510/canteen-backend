@@ -5,6 +5,8 @@ public class MenuCategory
     public int Id { get; set; }
     public required string Name { get; set; }
     public string? ImageUrl { get; set; }
+
+    public required string CategoryDescription { get; set; }
     public bool IsDeleted { get; set; } = false;
 
     // Navigation

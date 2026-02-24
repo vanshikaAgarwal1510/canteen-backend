@@ -54,7 +54,8 @@ public class MenuCategoryController : ControllerBase
        var newCategory = new MenuCategory
        {
            Name = request.Name,
-           ImageUrl = imageUrl
+           ImageUrl = imageUrl,
+           CategoryDescription = request.CategoryDescription
        };
 
        _db.MenuCategories.Add(newCategory);
@@ -82,6 +83,7 @@ public class MenuCategoryController : ControllerBase
             }
     
         category.Name = request.Name;
+        category.CategoryDescription = request.CategoryDescription;
 
         if (request.Image != null)
         {
@@ -120,6 +122,7 @@ public class MenuCategoryController : ControllerBase
             data =  new UpdateCategoryResponse{  
                 Name = category.Name,
                 ImageUrl = category.ImageUrl,
+                CategoryDescription = category.CategoryDescription,
                 CategoryId = category.Id
         }
         });
@@ -179,6 +182,9 @@ public class MenuCategoryController : ControllerBase
 public class AddMenuCategoryRequest
 {
     public required string Name { get; set; }
+
+    public required string CategoryDescription { get; set; }
+
    public IFormFile? Image { get; set; }
 
 }
@@ -188,12 +194,14 @@ public class UpdateCategoryRequest
 {
     public int CategoryId { get; set; }
      public required string Name { get; set; }
+     public required string CategoryDescription { get; set; }
     public IFormFile? Image { get; set; } // optional
 }
 public class UpdateCategoryResponse
 {
     public int CategoryId { get; set; }
      public required string Name { get; set; }
+     public required string CategoryDescription { get; set; }
     public string? ImageUrl { get; set; } // optional
 }
 

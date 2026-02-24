@@ -68,6 +68,7 @@ public class MenuItemController : ControllerBase
            Name = request.Name, 
            Price = request.Price,
            CategoryId = category.Id,
+           ItemDescription = request.ItemDescription,
            Category = category,
            IsAvailable = request.IsAvailable,
            ImageUrl = imageUrl
@@ -87,7 +88,8 @@ public class MenuItemController : ControllerBase
                 Price = newItem.Price,
                 IsAvailable = newItem.IsAvailable,
                 ImageUrl = newItem.ImageUrl,
-                CategoryId = category.Id
+                CategoryId = category.Id,
+                ItemDescription = newItem.ItemDescription
            }
        });
     }
@@ -110,6 +112,7 @@ public class MenuItemController : ControllerBase
         item.Price = request.Price;
         item.IsAvailable = request.IsAvailable;
         item.CategoryId = request.CategoryId;
+        item.ItemDescription = request.ItemDescription;
 
          // If new image uploaded → replace old one
          if (request.Image != null)
@@ -152,7 +155,8 @@ public class MenuItemController : ControllerBase
                 CategoryId = item.CategoryId,
                 ImageUrl = item.ImageUrl,
                 ItemId = item.Id,
-                IsAvailable = item.IsAvailable
+                IsAvailable = item.IsAvailable,
+                ItemDescription = item.ItemDescription
         }
         });
     }
@@ -202,6 +206,7 @@ public class AddMenuItemRequest
 {
     public required string Name { get; set; }
     public required decimal Price { get; set; }
+   public required string ItemDescription { get; set; }
     public required int CategoryId { get; set; }
     public required bool IsAvailable { get; set; }
     public IFormFile? Image { get; set; }
@@ -212,6 +217,7 @@ public class MenuItemResponseDto
 {
     public int Id { get; set; }
     public string Name { get; set; } =null!;
+    public string ItemDescription { get; set; } = null!;
     public decimal Price { get; set; }
     public bool IsAvailable { get; set; }
     public string? ImageUrl { get; set; }
@@ -223,6 +229,7 @@ public class UpdateItemRequest
     public int ItemId { get; set; }
     public bool IsAvailable { get; set; }
      public required string Name { get; set; }
+    public required string ItemDescription { get; set; }
     public decimal Price { get; set; }
     public int CategoryId { get; set; }
     public IFormFile? Image { get; set; } // optional
@@ -232,6 +239,7 @@ public class UpdateItemResponse
     public int ItemId { get; set; }
     public bool IsAvailable { get; set; }
      public required string Name { get; set; }
+    public required string ItemDescription { get; set; }
     public decimal Price { get; set; }
     public int CategoryId { get; set; }
     public string? ImageUrl { get; set; } // optional
