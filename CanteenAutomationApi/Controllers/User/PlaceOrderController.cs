@@ -64,13 +64,23 @@ public class PlaceOrderController : ControllerBase
             {
                 if (item.Quantity <= 0)
                 {
-                    return BadRequest("Quantity must be greater than zero");
+                       return BadRequest(new
+                    {
+                        status = 400,
+                        message ="Quantity must be greater than zero",
+                        data = (object?)null
+                    });
                 }
 
                 var menuItem = await _db.MenuItems.FindAsync(item.ItemId);
                 if (menuItem == null || !menuItem.IsAvailable)
                 {
-                    return BadRequest($"Menu item {item.ItemId} is not available");
+                       return BadRequest(new
+                    {
+                        status = 400,
+                        message = $"Menu item {item.ItemId} is not available",
+                        data = (object?)null
+                    });
                 }
 
                 subTotal += menuItem.Price * item.Quantity;
@@ -85,10 +95,32 @@ public class PlaceOrderController : ControllerBase
                     c.ExpiryDate > DateTime.UtcNow);
 
                 if (coupon == null)
-                    return BadRequest("Invalid or expired coupon");
+                   return BadRequest(new
+                    {
+                        status = 400,
+                        message = "Invalid or expired coupon",
+                        data = (object?)null
+                    });
+                    
+
+                 if (coupon.CouponId == 2 && !user.IsUniversityStudent)
+                {
+                    return BadRequest(new
+                    {
+                        status = 400,
+                        message = "Coupon not valid for you",
+                        data = (object?)null
+                    });
+                }
 
                 if (subTotal < coupon.MinOrderAmount)
-                    return BadRequest("Order amount too low for this coupon");
+                   return BadRequest(new
+                    {
+                        status = 400,
+                        message ="Order amount too low for this coupon",
+                        data = (object?)null
+                    });
+                
 
                 discount = coupon.DiscountType == "FLAT"
                     ? coupon.DiscountValue

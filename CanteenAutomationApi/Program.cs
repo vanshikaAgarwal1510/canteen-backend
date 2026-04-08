@@ -25,9 +25,11 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers();
 
 //add db context(meaning make a connection to the database if any api need db access)
+// builder.Services.AddDbContext<AppDbContext>(options =>
+//     options.UseSqlite("Data Source=Data/canteen.db")
+// );
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite("Data Source=Data/canteen.db")
-);
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 
 //add authentication service
@@ -57,18 +59,22 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+
 var app = builder.Build();
 
 app.UseCors("AllowFlutterWeb"); 
-app.MapControllers();
+
 app.UseStaticFiles();
+
+app.UseRouting();
 
 //“Check WHO the user is.”
 app.UseAuthentication();
 //“Check WHAT the user is allowed to do.”
 app.UseAuthorization();
 
-app.UseStaticFiles();
+app.MapControllers();
+
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -83,7 +89,10 @@ using (var scope = app.Services.CreateScope())
             FullName = "Admin",
             Email = "admin@canteen.com",
             PasswordHash = PasswordHelper.Hash("1234"),
-            RoleId = 1
+            RoleId = 1,
+            IsActive= true,
+            WalletBalance = 0,
+            IsUniversityStudent = false
         });
 
         db.SaveChanges();

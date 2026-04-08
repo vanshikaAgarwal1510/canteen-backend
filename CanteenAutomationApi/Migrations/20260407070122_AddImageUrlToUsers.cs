@@ -5,24 +5,23 @@
 namespace CanteenAutomationApi.Migrations
 {
     /// <inheritdoc />
-    public partial class AddWalletToUSer : Migration
+    public partial class AddImageUrlToUsers : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<decimal>(
-                name: "WalletBalance",
+            migrationBuilder.AddColumn<string>(
+                name: "ImageUrl",
                 table: "Users",
-                type: "TEXT",
-                nullable: false,
-                defaultValue: 0m);
+                type: "text",
+                nullable: true);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "WalletBalance",
+                name: "ImageUrl",
                 table: "Users");
         }
     }

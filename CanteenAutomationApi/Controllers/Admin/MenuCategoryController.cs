@@ -2,6 +2,7 @@ using CanteenBackend.Data;
 using CanteenBackend.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 
 [Authorize(Roles = "Admin")]
@@ -15,62 +16,110 @@ public class MenuCategoryController : ControllerBase
         _db = db;
     }
 
-    [Authorize(Roles = "Admin")]
-    [HttpPost("add-menu-category")]
-     public async Task<IActionResult> AddMenuCategory([FromForm] AddMenuCategoryRequest request)
+[Authorize(Roles = "Admin")]
+[HttpPost("add-menu-category")]
+[Consumes("multipart/form-data")]
+public async Task<IActionResult> AddMenuCategory(  [FromForm] AddMenuCategoryRequest request)
+   
+{
+    if (request.ApiKey != Constants.api)
     {
-       if(_db.MenuCategories.Any(c => c.Name == request.Name && !c.IsDeleted))
-       {
+        return Unauthorized(new
+        {
+            status = 401,
+            message = "Invalid API key",
+            data = (object?)null
+        });
+    }
+
+    if (await _db.MenuCategories.AnyAsync(c =>
+        c.Name.ToLower() == request.Name.ToLower() && !c.IsDeleted))
+    {
         return BadRequest(new
         {
             status = 400,
             message = "Menu category already exists",
             data = (object?)null
         });
-       }
-       
-       string? imageUrl = null;
+    }
 
-       if (request.Image != null)
+    string? imageUrl = null;
+
+    if (request.Image != null)
+    {
+        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+        var extension = Path.GetExtension(request.Image.FileName).ToLower();
+
+        if (!allowedExtensions.Contains(extension))
         {
-        //  Create unique file name
-        var fileName = Guid.NewGuid() + Path.GetExtension(request.Image.FileName);
+            return BadRequest(new
+            {
+                status = 400,
+                message = "Invalid image format",
+                data = (object?)null
+            });
+        }
 
-        //  Decide where to save
+        if (request.Image.Length > 2 * 1024 * 1024)
+        {
+            return BadRequest(new
+            {
+                status = 400,
+                message = "Image too large",
+                data = (object?)null
+            });
+        }
+
+        var fileName = Guid.NewGuid() + extension;
         var folderPath = Path.Combine("wwwroot/uploads/categories");
 
         Directory.CreateDirectory(folderPath);
 
-        //  Full file path
         var fullPath = Path.Combine(folderPath, fileName);
 
-        //  Save image to folder
         using var stream = new FileStream(fullPath, FileMode.Create);
         await request.Image.CopyToAsync(stream);
 
-        // Save path in DB
         imageUrl = "/uploads/categories/" + fileName;
-        }
-       var newCategory = new MenuCategory
-       {
-           Name = request.Name,
-           ImageUrl = imageUrl,
-           CategoryDescription = request.CategoryDescription
-       };
-
-       _db.MenuCategories.Add(newCategory);
-       await _db.SaveChangesAsync();
-       
-       return Ok(new
-       {
-           status = 200,
-           message = "Menu category added successfully",
-           data = newCategory
-       });
     }
-    [Authorize(Roles = "Admin")]
+
+    var newCategory = new MenuCategory
+    {
+        Name = request.Name,
+        ImageUrl = imageUrl,
+        CategoryDescription = request.CategoryDescription
+    };
+
+    _db.MenuCategories.Add(newCategory);
+    await _db.SaveChangesAsync();
+
+    return Ok(new
+    {
+        status = 200,
+        message = "Menu category added successfully",
+        data = new
+        {
+           categoryId = newCategory.Id,
+           categoryName = newCategory.Name,
+           imageUrl= newCategory.ImageUrl,
+           categoryDescription =  newCategory.CategoryDescription
+        }
+    });
+} 
+
+ [Authorize(Roles = "Admin")]
     [HttpPost("update-menu-category")]   
     public async Task<IActionResult> UpdateCategory([FromForm] UpdateCategoryRequest request){
+       
+        if (request.ApiKey != Constants.api)
+    {
+        return Unauthorized(new
+        {
+            status = 401,
+            message = "Invalid API key",
+            data = (object?)null
+        });
+    }
          var category = await _db.MenuCategories.FindAsync(request.CategoryId);
          if(category == null || category.IsDeleted)
          {
@@ -87,7 +136,29 @@ public class MenuCategoryController : ControllerBase
 
         if (request.Image != null)
         {
-         
+             var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+        var extension = Path.GetExtension(request.Image.FileName).ToLower();
+
+        if (!allowedExtensions.Contains(extension))
+        {
+            return BadRequest(new
+            {
+                status = 400,
+                message = "Invalid image format",
+                data = (object?)null
+            });
+        }
+
+        if (request.Image.Length > 2 * 1024 * 1024)
+        {
+            return BadRequest(new
+            {
+                status = 400,
+                message = "Image too large",
+                data = (object?)null
+            });
+        }
+
             if (!string.IsNullOrEmpty(category.ImageUrl))
             {
                 var oldPath = Path.Combine(
@@ -100,7 +171,7 @@ public class MenuCategoryController : ControllerBase
             }
 
         
-            var fileName = Guid.NewGuid() + Path.GetExtension(request.Image.FileName);
+            var fileName = Guid.NewGuid() + extension;
             var folderPath = Path.Combine("wwwroot/uploads/categories");
 
             Directory.CreateDirectory(folderPath);
@@ -120,7 +191,7 @@ public class MenuCategoryController : ControllerBase
             status = 200,
             message = "Category updated successfully",
             data =  new UpdateCategoryResponse{  
-                Name = category.Name,
+                CategoryName = category.Name,
                 ImageUrl = category.ImageUrl,
                 CategoryDescription = category.CategoryDescription,
                 CategoryId = category.Id
@@ -130,10 +201,19 @@ public class MenuCategoryController : ControllerBase
 
    [Authorize(Roles = "Admin")]
    [HttpPost("delete-menu-category")]
-    public async Task<IActionResult> DeleteCategory(int id)
-{
-  
-    var category = await _db.MenuCategories.FindAsync(id);
+    public async Task<IActionResult> DeleteCategory(DeleteCategoryRequest request)
+{   
+      if (request.ApiKey != Constants.api)
+    {
+        return Unauthorized(new
+        {
+            status = 401,
+            message = "Invalid API key",
+            data = (object?)null
+        });
+    }
+
+    var category = await _db.MenuCategories.FindAsync(request.CategoryId);
 
     if (category == null || category.IsDeleted)
          return NotFound(new
@@ -161,7 +241,7 @@ public class MenuCategoryController : ControllerBase
     category.IsDeleted = true;
 
     
-    var items = _db.MenuItems.Where(i => i.CategoryId == id);
+    var items = _db.MenuItems.Where(i => i.CategoryId == request.CategoryId );
     foreach (var item in items)
     {
         item.IsDeleted = true;
@@ -177,10 +257,9 @@ public class MenuCategoryController : ControllerBase
 }
 
 
-}
-
 public class AddMenuCategoryRequest
 {
+    public required string ApiKey { get; set; }
     public required string Name { get; set; }
 
     public required string CategoryDescription { get; set; }
@@ -192,6 +271,7 @@ public class AddMenuCategoryRequest
 
 public class UpdateCategoryRequest
 {
+    public required string ApiKey { get; set; }
     public int CategoryId { get; set; }
      public required string Name { get; set; }
      public required string CategoryDescription { get; set; }
@@ -199,9 +279,16 @@ public class UpdateCategoryRequest
 }
 public class UpdateCategoryResponse
 {
+    
     public int CategoryId { get; set; }
-     public required string Name { get; set; }
+     public required string CategoryName { get; set; }
      public required string CategoryDescription { get; set; }
     public string? ImageUrl { get; set; } // optional
+}
+public class DeleteCategoryRequest
+{
+    public required string ApiKey { get; set; }
+    public int CategoryId { get; set; }
+}
 }
 

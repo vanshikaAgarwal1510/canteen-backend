@@ -43,17 +43,17 @@ public class CouponController : ControllerBase
         });
     }
 
-    
-    var userExists = await _db.Users.AnyAsync(u => u.Id == userId);
-    if (!userExists)
-    {
-        return Unauthorized(new
+     var user = await _db.Users.FindAsync(userId);
+        if (user == null)
         {
-            status = 401,
-            message = "User does not exist",
-            data = (object?)null
-        });
-    }
+            return Unauthorized(new
+            {
+                status = 401,
+                message = "User does not exist",
+                data = (object?)null
+            });
+        }
+        
      decimal totalAmount = 0;
     decimal discount = 0;
 
@@ -93,11 +93,33 @@ public class CouponController : ControllerBase
                     c.ExpiryDate > DateTime.UtcNow);
         
             if (coupon == null)
-                return BadRequest("Invalid or expired coupon");
+              return BadRequest(new
+            {
+                status = 400,
+                message = "Invalid or expired coupon",
+                data = (object?)null
+            });
+              
+             if (coupon.CouponId == 2 && !user.IsUniversityStudent)
+            {
+                return BadRequest(new
+                {
+                    status = 400,
+                    message = "Coupon not valid for you",
+                    data = (object?)null
+                });
+            }
         
             if (totalAmount < coupon.MinOrderAmount)
-                return BadRequest("Order amount too low for this coupon");
-        
+                return BadRequest(new
+            {
+                status = 400,
+                message ="Order amount too low for this coupon" ,
+                data = (object?)null
+            }); 
+
+
+
             if (coupon.DiscountType == "FLAT")
                 discount = coupon.DiscountValue;
             else if (coupon.DiscountType == "PERCENT")
