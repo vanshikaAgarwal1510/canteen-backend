@@ -20,5 +20,8 @@ namespace CanteenBackend.Data
           public DbSet<Rating> Ratings { get; set; }
 
           public DbSet<Coupon> Coupons { get; set; }
+           public DbSet<Settings> Settings { get; set; }
+
+           public DbSet<PaymentMethod> PaymentMethods {get; set;}
     }
 }

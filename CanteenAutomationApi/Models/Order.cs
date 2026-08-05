@@ -9,7 +9,7 @@ public class Order
     public decimal Discount { get; set; }
     public decimal SubTotal { get; set; }
 
-     public string PickupCode { get; set; } = null!;
+    public string? PickupCode { get; set; }
     public bool IsPickedUp { get; set; } = false;
 
 

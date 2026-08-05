@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
+
 [Route("api/place-order")]
 [ApiController]
 public class PlaceOrderController : ControllerBase
@@ -52,6 +53,73 @@ public class PlaceOrderController : ControllerBase
             });
         }
 
+        // 1. Get Canteen Settings
+        var settings = await _db.Settings.FirstOrDefaultAsync();
+
+        if (settings == null)
+        {
+            return BadRequest(new
+            {
+                status = 400,
+                message = "Canteen settings not configured",
+                data = (object?)null
+            });
+        }
+
+        //  2. Check Canteen Open/Closed
+  var now = DateTime.Now.TimeOfDay;
+
+bool isWithinTime;
+
+if (settings.OpeningTime <= settings.ClosingTime)
+{
+    isWithinTime = now >= settings.OpeningTime &&
+                   now <= settings.ClosingTime;
+}
+else
+{
+    isWithinTime = now >= settings.OpeningTime ||
+                   now <= settings.ClosingTime;
+}
+
+bool isOpen = isWithinTime && settings.IsOpen;
+
+
+if (!isOpen)
+{
+    return BadRequest(new
+    {
+        status = 400,
+        message = "Canteen is currently closed",
+        data = (object?)null
+    });
+}
+
+        //  3. Online Ordering Toggle
+        if (!settings.IsOnlineOrderingEnabled)
+        {
+            return BadRequest(new
+            {
+                status = 400,
+                message = "Online ordering is disabled",
+                data = (object?)null
+            });
+        }
+
+        // 🔥 4. Max Active Orders
+        var activeOrdersCount = await _db.Orders
+            .CountAsync(o => o.Status != "Completed" && o.Status != "Cancelled");
+
+        if (activeOrdersCount >= settings.MaxActiveOrders)
+        {
+            return BadRequest(new
+            {
+                status = 400,
+                message = "Too many active orders. Please try later.",
+                data = (object?)null
+            });
+        }
+
         decimal subTotal = 0;
         decimal discount = 0;
 
@@ -59,15 +127,15 @@ public class PlaceOrderController : ControllerBase
 
         try
         {
-            // Calculate subtotal
+            // 🔹 Calculate subtotal
             foreach (var item in request.Items)
             {
                 if (item.Quantity <= 0)
                 {
-                       return BadRequest(new
+                    return BadRequest(new
                     {
                         status = 400,
-                        message ="Quantity must be greater than zero",
+                        message = "Quantity must be greater than zero",
                         data = (object?)null
                     });
                 }
@@ -75,7 +143,7 @@ public class PlaceOrderController : ControllerBase
                 var menuItem = await _db.MenuItems.FindAsync(item.ItemId);
                 if (menuItem == null || !menuItem.IsAvailable)
                 {
-                       return BadRequest(new
+                    return BadRequest(new
                     {
                         status = 400,
                         message = $"Menu item {item.ItemId} is not available",
@@ -86,7 +154,7 @@ public class PlaceOrderController : ControllerBase
                 subTotal += menuItem.Price * item.Quantity;
             }
 
-            // Coupon logic (ONCE)
+            // 🔹 Coupon logic
             if (!string.IsNullOrEmpty(request.CouponCode))
             {
                 var coupon = await _db.Coupons.FirstOrDefaultAsync(c =>
@@ -95,15 +163,14 @@ public class PlaceOrderController : ControllerBase
                     c.ExpiryDate > DateTime.UtcNow);
 
                 if (coupon == null)
-                   return BadRequest(new
+                    return BadRequest(new
                     {
                         status = 400,
                         message = "Invalid or expired coupon",
                         data = (object?)null
                     });
-                    
 
-                 if (coupon.CouponId == 2 && !user.IsUniversityStudent)
+                if (coupon.CouponId == 2 && !user.IsUniversityStudent)
                 {
                     return BadRequest(new
                     {
@@ -114,13 +181,12 @@ public class PlaceOrderController : ControllerBase
                 }
 
                 if (subTotal < coupon.MinOrderAmount)
-                   return BadRequest(new
+                    return BadRequest(new
                     {
                         status = 400,
-                        message ="Order amount too low for this coupon",
+                        message = "Order amount too low for this coupon",
                         data = (object?)null
                     });
-                
 
                 discount = coupon.DiscountType == "FLAT"
                     ? coupon.DiscountValue
@@ -131,7 +197,7 @@ public class PlaceOrderController : ControllerBase
 
             decimal totalAmount = subTotal - discount;
 
-            // Wallet validation
+            // 🔹 Wallet payment
             if (request.PaymentMethod == 5)
             {
                 if (user.WalletBalance < totalAmount)
@@ -157,13 +223,15 @@ public class PlaceOrderController : ControllerBase
                 SubTotal = subTotal,
                 Discount = discount,
                 FinalAmount = totalAmount,
-                PickupCode = GeneratePickupCode()
+                PickupCode = settings.RequirePickupCode!
+                    ? GeneratePickupCode()
+                    : null
             };
 
             _db.Orders.Add(order);
             await _db.SaveChangesAsync();
 
-            // Create Order Items
+            // 🔹 Order Items
             foreach (var item in request.Items)
             {
                 var menuItem = await _db.MenuItems.FindAsync(item.ItemId);
@@ -181,7 +249,7 @@ public class PlaceOrderController : ControllerBase
 
             await _db.SaveChangesAsync();
 
-            // Payment
+            // 🔹 Payment
             var payment = new Payment
             {
                 OrderId = order.Id,
@@ -219,11 +287,10 @@ public class PlaceOrderController : ControllerBase
     }
 
     private string GeneratePickupCode()
-{
-    return Random.Shared.Next(1000, 9999).ToString(); // 4-digit
+    {
+        return Random.Shared.Next(1000, 9999).ToString();
+    }
 }
-}
-
 public class PlaceOrderRequest
 {
     public List<OrderItemRequest> Items { get; set; } = new();

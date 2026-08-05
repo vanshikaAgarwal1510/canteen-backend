@@ -14,11 +14,14 @@ public class User
     public string? OtpCode { get; set; }
     public DateTime? OtpExpiry { get; set; }
 
-     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? LastLoginAt { get; set; }
 
-   public int? StaffType { get; set; } //1 fullTime, 2 part-time, 3 contract
+    public int? StaffType { get; set; } //1 fullTime, 2 part-time, 3 contract
 
     public bool IsActive { get; set; }
+
+    public bool IsDeleted { get; set; } = false;
 
     public decimal WalletBalance { get; set; } = 0;
 
@@ -27,7 +30,7 @@ public class User
     public int RoleId { get; set; }
 
     // Navigation
-    public  Role Role { get; set; }= null!;
-    public  List<Order>? Orders { get; set; }
+    public Role Role { get; set; } = null!;
+    public List<Order>? Orders { get; set; }
 }
 

@@ -3,6 +3,7 @@ using System;
 using CanteenBackend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CanteenAutomationApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260410092631_AddIsDeletedToUsers")]
+    partial class AddIsDeletedToUsers
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -46,7 +49,7 @@ namespace CanteenAutomationApi.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("MenuCategories", (string)null);
+                    b.ToTable("MenuCategories");
                 });
 
             modelBuilder.Entity("CanteenBackend.Models.MenuItem", b =>
@@ -84,7 +87,7 @@ namespace CanteenAutomationApi.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.ToTable("MenuItems", (string)null);
+                    b.ToTable("MenuItems");
                 });
 
             modelBuilder.Entity("CanteenBackend.Models.Order", b =>
@@ -128,7 +131,7 @@ namespace CanteenAutomationApi.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Orders", (string)null);
+                    b.ToTable("Orders");
                 });
 
             modelBuilder.Entity("CanteenBackend.Models.OrderItem", b =>
@@ -157,7 +160,7 @@ namespace CanteenAutomationApi.Migrations
 
                     b.HasIndex("OrderId");
 
-                    b.ToTable("OrderItems", (string)null);
+                    b.ToTable("OrderItems");
                 });
 
             modelBuilder.Entity("CanteenBackend.Models.Payment", b =>
@@ -186,7 +189,7 @@ namespace CanteenAutomationApi.Migrations
                     b.HasIndex("OrderId")
                         .IsUnique();
 
-                    b.ToTable("Payments", (string)null);
+                    b.ToTable("Payments");
                 });
 
             modelBuilder.Entity("CanteenBackend.Models.Role", b =>
@@ -203,53 +206,7 @@ namespace CanteenAutomationApi.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Roles", (string)null);
-                });
-
-            modelBuilder.Entity("CanteenBackend.Models.Settings", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Address")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("CanteenName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<TimeSpan>("ClosingTime")
-                        .HasColumnType("interval");
-
-                    b.Property<string>("ContactNumber")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<bool>("IsManuallyClosed")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsOnlineOrderingEnabled")
-                        .HasColumnType("boolean");
-
-                    b.Property<int>("MaxActiveOrders")
-                        .HasColumnType("integer");
-
-                    b.Property<TimeSpan>("OpeningTime")
-                        .HasColumnType("interval");
-
-                    b.Property<bool>("RequirePickupCode")
-                        .HasColumnType("boolean");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Settings", (string)null);
+                    b.ToTable("Roles");
                 });
 
             modelBuilder.Entity("CanteenBackend.Models.User", b =>
@@ -282,9 +239,6 @@ namespace CanteenAutomationApi.Migrations
                     b.Property<bool>("IsUniversityStudent")
                         .HasColumnType("boolean");
 
-                    b.Property<DateTime?>("LastLoginAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<string>("MobileNumber")
                         .HasColumnType("text");
 
@@ -310,7 +264,7 @@ namespace CanteenAutomationApi.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("Coupon", b =>
@@ -351,7 +305,7 @@ namespace CanteenAutomationApi.Migrations
 
                     b.HasKey("CouponId");
 
-                    b.ToTable("Coupons", (string)null);
+                    b.ToTable("Coupons");
                 });
 
             modelBuilder.Entity("Rating", b =>
@@ -385,7 +339,7 @@ namespace CanteenAutomationApi.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Ratings", (string)null);
+                    b.ToTable("Ratings");
                 });
 
             modelBuilder.Entity("CanteenBackend.Models.MenuItem", b =>

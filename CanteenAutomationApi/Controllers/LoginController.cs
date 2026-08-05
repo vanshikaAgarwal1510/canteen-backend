@@ -50,7 +50,7 @@ public IActionResult Login(LoginRequest request)
 
     //  Generate JWT
     var jwtToken = JwtHelper.GenerateToken(dbUser, _config);
-
+    dbUser.LastLoginAt = DateTime.UtcNow;
     dbUser.IsActive = true;
     _db.SaveChanges();
 
@@ -65,7 +65,9 @@ public IActionResult Login(LoginRequest request)
          {
             dbUser.FullName,
             dbUser.Email,
-            Role = dbUser.Role.Name,        
+            Role = dbUser.Role.Name,
+            dbUser.MobileNumber   ,
+            dbUser.ImageUrl                                                                                                                                                                                                 
          },
         token = jwtToken,
         }
