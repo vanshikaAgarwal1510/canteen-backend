@@ -5,24 +5,25 @@
 namespace CanteenAutomationApi.Migrations
 {
     /// <inheritdoc />
-    public partial class AddImageUrlToUsers : Migration
+    public partial class AddIsMethodDeletable : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<string>(
-                name: "ImageUrl",
-                table: "Users",
-                type: "text",
-                nullable: true);
+            migrationBuilder.AddColumn<bool>(
+                name: "IsMethodDeletable",
+                table: "PaymentMethods",
+                type: "boolean",
+                nullable: false,
+                defaultValue: false);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "ImageUrl",
-                table: "Users");
+                name: "IsMethodDeletable",
+                table: "PaymentMethods");
         }
     }
 }

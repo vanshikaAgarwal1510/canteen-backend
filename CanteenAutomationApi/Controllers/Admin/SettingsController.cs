@@ -362,6 +362,8 @@ public class SettingsController : ControllerBase
 
 }
 
+////////////////////////////////////// DTO's //////////////////////////////////////
+
 public class AdminProfileRequest{
   public required string ApiKey { get; set; }
   public required string FullName{get; set;}

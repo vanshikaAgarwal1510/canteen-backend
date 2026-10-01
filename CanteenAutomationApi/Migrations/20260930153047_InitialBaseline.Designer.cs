@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CanteenAutomationApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260410172143_AddLastLogin")]
-    partial class AddLastLogin
+    [Migration("20260930153047_InitialBaseline")]
+    partial class InitialBaseline
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -114,7 +114,6 @@ namespace CanteenAutomationApi.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("PickupCode")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Status")
@@ -209,6 +208,52 @@ namespace CanteenAutomationApi.Migrations
                     b.ToTable("Roles");
                 });
 
+            modelBuilder.Entity("CanteenBackend.Models.Settings", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("CanteenName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<TimeSpan>("ClosingTime")
+                        .HasColumnType("interval");
+
+                    b.Property<string>("ContactNumber")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsOnlineOrderingEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsOpen")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("MaxActiveOrders")
+                        .HasColumnType("integer");
+
+                    b.Property<TimeSpan>("OpeningTime")
+                        .HasColumnType("interval");
+
+                    b.Property<bool>("RequirePickupCode")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Settings");
+                });
+
             modelBuilder.Entity("CanteenBackend.Models.User", b =>
                 {
                     b.Property<int>("Id")
@@ -238,6 +283,9 @@ namespace CanteenAutomationApi.Migrations
 
                     b.Property<bool>("IsUniversityStudent")
                         .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("LastLoginAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("MobileNumber")
                         .HasColumnType("text");
@@ -306,6 +354,33 @@ namespace CanteenAutomationApi.Migrations
                     b.HasKey("CouponId");
 
                     b.ToTable("Coupons");
+                });
+
+            modelBuilder.Entity("PaymentMethod", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PaymentMethods");
                 });
 
             modelBuilder.Entity("Rating", b =>

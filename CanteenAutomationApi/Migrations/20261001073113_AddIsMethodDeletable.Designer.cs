@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CanteenAutomationApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260413185037_NullablePickupCode")]
-    partial class NullablePickupCode
+    [Migration("20261001073113_AddIsMethodDeletable")]
+    partial class AddIsMethodDeletable
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -114,7 +114,6 @@ namespace CanteenAutomationApi.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("PickupCode")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Status")
@@ -232,10 +231,10 @@ namespace CanteenAutomationApi.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<bool>("IsManuallyClosed")
+                    b.Property<bool>("IsOnlineOrderingEnabled")
                         .HasColumnType("boolean");
 
-                    b.Property<bool>("IsOnlineOrderingEnabled")
+                    b.Property<bool>("IsOpen")
                         .HasColumnType("boolean");
 
                     b.Property<int>("MaxActiveOrders")
@@ -355,6 +354,36 @@ namespace CanteenAutomationApi.Migrations
                     b.HasKey("CouponId");
 
                     b.ToTable("Coupons");
+                });
+
+            modelBuilder.Entity("PaymentMethod", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsMethodDeletable")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PaymentMethods");
                 });
 
             modelBuilder.Entity("Rating", b =>

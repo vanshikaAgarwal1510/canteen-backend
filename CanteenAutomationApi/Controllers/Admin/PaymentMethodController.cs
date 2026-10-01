@@ -28,12 +28,15 @@ public class PaymentMethodController : ControllerBase
                 data = (object?)null
             });
         }
-        var method = await _db.PaymentMethods
+        var method = await _db.PaymentMethods.OrderBy(u=>u.Id)
             .Select(u => new AddPaymentMethodResponse
             {
                 Id = u.Id,
                 Name = u.Name,
-                IsEnabled= u.IsEnabled
+                IsEnabled= u.IsEnabled,
+                Description = u.Description,
+                Deletable = u.IsMethodDeletable
+
             
             })
             .ToListAsync();
@@ -83,7 +86,9 @@ public class PaymentMethodController : ControllerBase
         var method = new PaymentMethod
         {
            Name = request.Name,
-           IsEnabled = true
+           IsEnabled = true,
+           Description = request.Description,
+           IsMethodDeletable = false
         };
 
 
@@ -99,7 +104,8 @@ public class PaymentMethodController : ControllerBase
             {
               Id = method.Id,
               Name = method.Name,
-              IsEnabled = method.IsEnabled
+              IsEnabled = method.IsEnabled,
+              Description = method.Description
             }
 
         });
@@ -119,6 +125,7 @@ public class PaymentMethodController : ControllerBase
 
         var method = await _db.PaymentMethods
             .FirstOrDefaultAsync(u => u.Id == request.Id );
+        
 
         if (method == null)
             return BadRequest(new
@@ -127,6 +134,16 @@ public class PaymentMethodController : ControllerBase
                 message = "Payment Method does not exist",
                 data = (object?)null
             });
+
+            if(!request.IsEnabled && !method.IsMethodDeletable)
+        {
+            return BadRequest(new
+            {
+                status = 400,
+                message = "Can't update for this payment Method" ,
+                data = (object?) null
+            });
+        }
 
          method.IsEnabled = request.IsEnabled;
 
@@ -140,7 +157,8 @@ public class PaymentMethodController : ControllerBase
             {
                 Id = method.Id,
                 Name = method.Name,
-                IsEnabled = method.IsEnabled
+                IsEnabled = method.IsEnabled,
+                Description = method.Description
              
             }
         });
@@ -169,6 +187,15 @@ public class PaymentMethodController : ControllerBase
                 data = (object?)null
             });
 
+        if(!method.IsMethodDeletable)
+        {
+            return BadRequest(new
+            {
+                status = 400,
+                message = "Can't delete  this Payment Method" ,
+                data = (object?) null
+            });
+        }
 
 
 
@@ -193,6 +220,10 @@ public class AddPaymentMethodRequest
 {
     public required string ApiKey { get; set; }
     public required string Name { get; set; }
+
+    public required string Description{get; set;}
+
+
     
 }
 
@@ -201,6 +232,10 @@ public class AddPaymentMethodResponse
     public int Id { get; set; }
     public required string Name { get; set; } 
     public bool IsEnabled { get; set; }
+
+     public bool Deletable { get; set; }
+
+    public required string Description{get; set;}
 
 }
 

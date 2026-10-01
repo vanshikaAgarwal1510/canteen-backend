@@ -5,7 +5,7 @@
 namespace CanteenAutomationApi.Migrations
 {
     /// <inheritdoc />
-    public partial class CanteenSettings : Migration
+    public partial class ChangeIsMethodDeletableDefault : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

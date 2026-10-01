@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CanteenAutomationApi.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialBaseline : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -24,6 +24,7 @@ namespace CanteenAutomationApi.Migrations
                     MinOrderAmount = table.Column<decimal>(type: "numeric", nullable: false),
                     ExpiryDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
@@ -48,6 +49,22 @@ namespace CanteenAutomationApi.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "PaymentMethods",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    Description = table.Column<string>(type: "text", nullable: false),
+                    IsEnabled = table.Column<bool>(type: "boolean", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PaymentMethods", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Roles",
                 columns: table => new
                 {
@@ -58,6 +75,28 @@ namespace CanteenAutomationApi.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Roles", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Settings",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    CanteenName = table.Column<string>(type: "text", nullable: false),
+                    Address = table.Column<string>(type: "text", nullable: false),
+                    ContactNumber = table.Column<string>(type: "text", nullable: false),
+                    OpeningTime = table.Column<TimeSpan>(type: "interval", nullable: false),
+                    ClosingTime = table.Column<TimeSpan>(type: "interval", nullable: false),
+                    IsOpen = table.Column<bool>(type: "boolean", nullable: false),
+                    IsOnlineOrderingEnabled = table.Column<bool>(type: "boolean", nullable: false),
+                    RequirePickupCode = table.Column<bool>(type: "boolean", nullable: false),
+                    MaxActiveOrders = table.Column<int>(type: "integer", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Settings", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -92,14 +131,17 @@ namespace CanteenAutomationApi.Migrations
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     FullName = table.Column<string>(type: "text", nullable: false),
+                    ImageUrl = table.Column<string>(type: "text", nullable: true),
                     Email = table.Column<string>(type: "text", nullable: true),
                     PasswordHash = table.Column<string>(type: "text", nullable: true),
                     MobileNumber = table.Column<string>(type: "text", nullable: true),
                     OtpCode = table.Column<string>(type: "text", nullable: true),
                     OtpExpiry = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    LastLoginAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     StaffType = table.Column<int>(type: "integer", nullable: true),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
                     WalletBalance = table.Column<decimal>(type: "numeric", nullable: false),
                     IsUniversityStudent = table.Column<bool>(type: "boolean", nullable: false),
                     RoleId = table.Column<int>(type: "integer", nullable: false)
@@ -126,7 +168,7 @@ namespace CanteenAutomationApi.Migrations
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     Discount = table.Column<decimal>(type: "numeric", nullable: false),
                     SubTotal = table.Column<decimal>(type: "numeric", nullable: false),
-                    PickupCode = table.Column<string>(type: "text", nullable: false),
+                    PickupCode = table.Column<string>(type: "text", nullable: true),
                     IsPickedUp = table.Column<bool>(type: "boolean", nullable: false),
                     OrderType = table.Column<int>(type: "integer", nullable: false),
                     UserId = table.Column<int>(type: "integer", nullable: false)
@@ -284,10 +326,16 @@ namespace CanteenAutomationApi.Migrations
                 name: "OrderItems");
 
             migrationBuilder.DropTable(
+                name: "PaymentMethods");
+
+            migrationBuilder.DropTable(
                 name: "Payments");
 
             migrationBuilder.DropTable(
                 name: "Ratings");
+
+            migrationBuilder.DropTable(
+                name: "Settings");
 
             migrationBuilder.DropTable(
                 name: "MenuItems");
