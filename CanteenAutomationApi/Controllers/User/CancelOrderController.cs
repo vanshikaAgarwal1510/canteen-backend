@@ -52,7 +52,7 @@ public class CancelOrderController : ControllerBase
             });
             }
             
-            if(order.Status != "Pending")
+            if(order.Status != 1)
             {
               return BadRequest(new
               {
@@ -75,7 +75,7 @@ public class CancelOrderController : ControllerBase
          
              }
         
-            order.Status = "Cancelled";
+            order.Status = 5;
             await _db.SaveChangesAsync();
 
 

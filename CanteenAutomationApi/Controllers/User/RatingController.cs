@@ -53,7 +53,7 @@ public class RatingsController : ControllerBase
             });
 
        
-        if (order.Status != "Completed")
+        if (order.Status != 4)
             return BadRequest(new
             {
                 status = 400,

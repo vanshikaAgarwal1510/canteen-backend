@@ -1,4 +1,4 @@
-  using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using CanteenBackend.Data;
 using System.Threading.Tasks;
@@ -10,13 +10,13 @@ using Microsoft.EntityFrameworkCore;
 [Route("api/payment-method")]
 public class PaymentMethodController : ControllerBase
 {
-     private readonly AppDbContext _db;
+    private readonly AppDbContext _db;
 
     public PaymentMethodController(AppDbContext db)
     {
         _db = db;
     }
-     [HttpPost("get-payment-method")]
+    [HttpPost("get-payment-method")]
     public async Task<IActionResult> GetPaymentMethodList(GetPaymentMethodRequest request)
     {
         if (request.ApiKey != Constants.api)
@@ -28,16 +28,16 @@ public class PaymentMethodController : ControllerBase
                 data = (object?)null
             });
         }
-        var method = await _db.PaymentMethods.OrderBy(u=>u.Id)
+        var method = await _db.PaymentMethods.OrderBy(u => u.Id)
             .Select(u => new AddPaymentMethodResponse
             {
                 Id = u.Id,
                 Name = u.Name,
-                IsEnabled= u.IsEnabled,
+                IsEnabled = u.IsEnabled,
                 Description = u.Description,
                 Deletable = u.IsMethodDeletable
 
-            
+
             })
             .ToListAsync();
 
@@ -81,14 +81,14 @@ public class PaymentMethodController : ControllerBase
             });
 
 
-     
+
 
         var method = new PaymentMethod
         {
-           Name = request.Name,
-           IsEnabled = true,
-           Description = request.Description,
-           IsMethodDeletable = false
+            Name = request.Name,
+            IsEnabled = true,
+            Description = request.Description,
+            IsMethodDeletable = false
         };
 
 
@@ -102,10 +102,10 @@ public class PaymentMethodController : ControllerBase
             message = "Payment Method added successfully",
             data = new AddPaymentMethodResponse
             {
-              Id = method.Id,
-              Name = method.Name,
-              IsEnabled = method.IsEnabled,
-              Description = method.Description
+                Id = method.Id,
+                Name = method.Name,
+                IsEnabled = method.IsEnabled,
+                Description = method.Description
             }
 
         });
@@ -124,8 +124,8 @@ public class PaymentMethodController : ControllerBase
         }
 
         var method = await _db.PaymentMethods
-            .FirstOrDefaultAsync(u => u.Id == request.Id );
-        
+            .FirstOrDefaultAsync(u => u.Id == request.Id);
+
 
         if (method == null)
             return BadRequest(new
@@ -135,31 +135,31 @@ public class PaymentMethodController : ControllerBase
                 data = (object?)null
             });
 
-            if(!request.IsEnabled && !method.IsMethodDeletable)
+        if (!request.IsEnabled && !method.IsMethodDeletable)
         {
             return BadRequest(new
             {
                 status = 400,
-                message = "Can't update for this payment Method" ,
-                data = (object?) null
+                message = "Can't update for this payment Method",
+                data = (object?)null
             });
         }
 
-         method.IsEnabled = request.IsEnabled;
+        method.IsEnabled = request.IsEnabled;
 
         await _db.SaveChangesAsync();
 
         return Ok(new
         {
             status = 200,
-            message = "Coupon updated successfully",
+            message = "Payment Method updated successfully",
             data = new AddPaymentMethodResponse
             {
                 Id = method.Id,
                 Name = method.Name,
                 IsEnabled = method.IsEnabled,
                 Description = method.Description
-             
+
             }
         });
     }
@@ -187,20 +187,20 @@ public class PaymentMethodController : ControllerBase
                 data = (object?)null
             });
 
-        if(!method.IsMethodDeletable)
+        if (!method.IsMethodDeletable)
         {
             return BadRequest(new
             {
                 status = 400,
-                message = "Can't delete  this Payment Method" ,
-                data = (object?) null
+                message = "Can't delete  this Payment Method",
+                data = (object?)null
             });
         }
 
 
 
-    _db.PaymentMethods.Remove(method);
-    await _db.SaveChangesAsync();
+        _db.PaymentMethods.Remove(method);
+        await _db.SaveChangesAsync();
 
 
         return Ok(new
@@ -221,21 +221,21 @@ public class AddPaymentMethodRequest
     public required string ApiKey { get; set; }
     public required string Name { get; set; }
 
-    public required string Description{get; set;}
+    public required string Description { get; set; }
 
 
-    
+
 }
 
 public class AddPaymentMethodResponse
 {
     public int Id { get; set; }
-    public required string Name { get; set; } 
+    public required string Name { get; set; }
     public bool IsEnabled { get; set; }
 
-     public bool Deletable { get; set; }
+    public bool Deletable { get; set; }
 
-    public required string Description{get; set;}
+    public required string Description { get; set; }
 
 }
 

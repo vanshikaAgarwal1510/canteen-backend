@@ -19,8 +19,17 @@ public class PlaceOrderController : ControllerBase
 
     [Authorize(Roles = "User")]
     [HttpPost]
-    public async Task<IActionResult> PlaceOrder([FromBody] PlaceOrderRequest request)
+    public async Task<IActionResult> PlaceOrder([FromBody] PlaceOrderRequest request) 
     {
+        if (request.ApiKey != Constants.api)
+    {
+        return Unauthorized(new
+        {
+            status = 401,
+            message = "An invalid API key was provided",
+            data = (object?)null
+        });
+    }
         if (request.Items == null || !request.Items.Any())
         {
             return BadRequest(new
@@ -71,7 +80,7 @@ public class PlaceOrderController : ControllerBase
 
 bool isWithinTime;
 
-if (settings.OpeningTime <= settings.ClosingTime)
+if (settings.OpeningTime <= settings.ClosingTime)   
 {
     isWithinTime = now >= settings.OpeningTime &&
                    now <= settings.ClosingTime;
@@ -85,7 +94,7 @@ else
 bool isOpen = isWithinTime && settings.IsOpen;
 
 
-if (!isOpen)
+if (!isOpen)                                                                                                                                                     
 {
     return BadRequest(new
     {
@@ -106,9 +115,9 @@ if (!isOpen)
             });
         }
 
-        // 🔥 4. Max Active Orders
+        //  4. Max Active Orders
         var activeOrdersCount = await _db.Orders
-            .CountAsync(o => o.Status != "Completed" && o.Status != "Cancelled");
+            .CountAsync(o => o.Status != 4 && o.Status != 5);
 
         if (activeOrdersCount >= settings.MaxActiveOrders)
         {
@@ -120,6 +129,7 @@ if (!isOpen)
             });
         }
 
+
         decimal subTotal = 0;
         decimal discount = 0;
 
@@ -127,7 +137,7 @@ if (!isOpen)
 
         try
         {
-            // 🔹 Calculate subtotal
+            //  Calculate subtotal
             foreach (var item in request.Items)
             {
                 if (item.Quantity <= 0)
@@ -154,11 +164,11 @@ if (!isOpen)
                 subTotal += menuItem.Price * item.Quantity;
             }
 
-            // 🔹 Coupon logic
+            //   Coupon logic
             if (!string.IsNullOrEmpty(request.CouponCode))
             {
                 var coupon = await _db.Coupons.FirstOrDefaultAsync(c =>
-                    c.Code == request.CouponCode.ToUpper() &&
+                    c.Code.ToUpper() == request.CouponCode.ToUpper() &&
                     c.IsActive &&
                     c.ExpiryDate > DateTime.UtcNow);
 
@@ -197,7 +207,7 @@ if (!isOpen)
 
             decimal totalAmount = subTotal - discount;
 
-            // 🔹 Wallet payment
+            //  Wallet payment
             if (request.PaymentMethod == 5)
             {
                 if (user.WalletBalance < totalAmount)
@@ -218,20 +228,22 @@ if (!isOpen)
             {
                 UserId = userId,
                 CreatedAt = DateTime.UtcNow,
-                Status = "Pending",
+                Status = 1,
                 OrderType = request.OrderType,
                 SubTotal = subTotal,
                 Discount = discount,
                 FinalAmount = totalAmount,
+                RequirePickupCode = settings.RequirePickupCode,
                 PickupCode = settings.RequirePickupCode!
                     ? GeneratePickupCode()
                     : null
+
             };
 
             _db.Orders.Add(order);
             await _db.SaveChangesAsync();
 
-            // 🔹 Order Items
+            //  Order Items
             foreach (var item in request.Items)
             {
                 var menuItem = await _db.MenuItems.FindAsync(item.ItemId);
@@ -249,7 +261,7 @@ if (!isOpen)
 
             await _db.SaveChangesAsync();
 
-            // 🔹 Payment
+            //  Payment
             var payment = new Payment
             {
                 OrderId = order.Id,
@@ -293,13 +305,14 @@ if (!isOpen)
 }
 public class PlaceOrderRequest
 {
+    public required string ApiKey { get; set; }
     public List<OrderItemRequest> Items { get; set; } = new();
     public int PaymentMethod { get; set; } // 1= cash, 2= phonepay, 3=paytm, 4=googlePay etc.
      public int OrderType{get; set;} // 1= Dine-In, 2= Takeaway,
      public string? CouponCode{get; set;}
 
 }
-public class OrderItemRequest
+public class OrderItemRequest       
 {
     public int ItemId { get; set; }
     public int Quantity { get; set; }

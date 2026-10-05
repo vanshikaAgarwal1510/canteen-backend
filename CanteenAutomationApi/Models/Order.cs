@@ -3,11 +3,12 @@ namespace CanteenBackend.Models;
 public class Order
 {
     public int Id { get; set; }
-    public required string Status { get; set; }
+    public required int Status { get; set; }
     public decimal FinalAmount { get; set; }
     public DateTime CreatedAt { get; set; }
     public decimal Discount { get; set; }
     public decimal SubTotal { get; set; }
+    public bool RequirePickupCode { get; set; }
 
     public string? PickupCode { get; set; }
     public bool IsPickedUp { get; set; } = false;

@@ -34,9 +34,9 @@ public class GetOrdersController : ControllerBase
 
         var ordersQuery = _db.Orders.AsQueryable();
 
-        if (!string.IsNullOrEmpty(request.Status))
+        if (request.Status.HasValue)
         {
-            ordersQuery = ordersQuery.Where(o => o.Status == request.Status);
+            ordersQuery = ordersQuery.Where(o => o.Status == request.Status.Value);
         }
 
         if (request.OrderType.HasValue)
@@ -49,14 +49,18 @@ public class GetOrdersController : ControllerBase
             ordersQuery = ordersQuery.Where(o => o.Payment != null && o.Payment.PaymentStatus == request.PaymentStatus);
         }
 
-        if (!string.IsNullOrEmpty(request.FromDate))
-        {
-            if (DateTime.TryParse(request.FromDate, out DateTime fromDate))
-            {
-                ordersQuery = ordersQuery.Where(o => o.CreatedAt >= fromDate);
-            }
-        }
-
+              if (!string.IsNullOrEmpty(request.FromDate))
+       {
+           if (DateTime.TryParse(
+               request.FromDate,
+               null,
+               System.Globalization.DateTimeStyles.AssumeUniversal |
+               System.Globalization.DateTimeStyles.AdjustToUniversal,
+               out DateTime fromDate))
+           {
+               ordersQuery = ordersQuery.Where(o => o.CreatedAt >= fromDate);
+           }
+       }
     
 
         var orders = await ordersQuery
@@ -73,6 +77,8 @@ public class GetOrdersController : ControllerBase
                 TotalAmount = o.FinalAmount,
                 PaymentStatus = o.Payment != null ? o.Payment.PaymentStatus : "Pending",
                 OrderType = o.OrderType,
+                RequirePickupCode =o.RequirePickupCode,
+                
 
                 UserId = o.User.Id,
                 UserName = o.User.FullName,
@@ -100,7 +106,7 @@ public class GetOrdersController : ControllerBase
     public async Task<IActionResult> GetActiveOrders()
     {
        var orders = await _db.Orders
-    .Where(o => o.Status != "Completed" && o.Status != "Cancelled")
+    .Where(o => o.Status != 4 && o.Status != 5)
     .Include(o => o.User)
     .Include(o => o.Payment)        
     .Include(o => o.Items)
@@ -114,6 +120,7 @@ public class GetOrdersController : ControllerBase
         TotalAmount = o.FinalAmount,
         PaymentStatus = o.Payment != null ? o.Payment.PaymentStatus : "Pending",
         OrderType = o.OrderType,
+        RequirePickupCode = o.RequirePickupCode,
 
         UserId = o.User.Id,
         UserName = o.User.FullName,
@@ -164,7 +171,9 @@ public class GetOrdersController : ControllerBase
                 OrderType=o.OrderType,
                 Status = o.Status,
                 UserName = o.User.FullName,
-                UserNumber = "123456789", // Assuming you have a phone number field in User model, replace with actual field
+                UserNumber = o.User.MobileNumber != null ? o.User.MobileNumber:"", 
+                RequirePickupCode = o.RequirePickupCode,
+
 
             
                 PaymentStatus = o.Payment != null ? o.Payment.PaymentStatus : "Pending",
@@ -181,7 +190,7 @@ public class GetOrdersController : ControllerBase
                     Price = oi.Price,
                     Quantity = oi.Quantity,
                     TotalPrice = oi.Price * oi.Quantity,
-                    ImageUrl = "http://localhost:5123" + (oi.Item.ImageUrl ?? string.Empty)
+                    ImageUrl = oi.Item.ImageUrl!=null? "http://localhost:5123" + oi.Item.ImageUrl: null
                 }).ToList()
 
 
@@ -205,10 +214,11 @@ public class GetOrdersController : ControllerBase
             data = order
         });
 }}
+
 public class FilteredOrdersRequest
 {
     public required string ApiKey { get; set; }
-     public string Status { get; set; } = string.Empty;
+     public int? Status { get; set; }
     public string? FromDate { get; set; } = null;
      public int? OrderType{get; set;} =null;
      public string? PaymentStatus { get; set; } = null!;
@@ -227,7 +237,9 @@ public class OrderResponseDetailsDto
     public int OrderId { get; set; }
     public DateTime OrderDate { get; set; } 
      public int OrderType { get; set; }
-    public string Status { get; set; } = null!;
+    public int Status { get; set; }
+
+    public bool RequirePickupCode{get; set;}
 
   
   // User info
@@ -257,7 +269,7 @@ public class OrderResponseDetailsDto
     public decimal Price { get; set; }
     public int Quantity { get; set; }
     public decimal TotalPrice { get; set; }
-    public string ImageUrl { get; set; } = null!;
+    public string? ImageUrl { get; set; } = null!;
 }
 
 

@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CanteenAutomationApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20261001142521_ChangeIsMethodDeletableDefault")]
-    partial class ChangeIsMethodDeletableDefault
+    [Migration("20261005182514_AddRequirePickupCodeToOrder")]
+    partial class AddRequirePickupCodeToOrder
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -116,9 +116,11 @@ namespace CanteenAutomationApi.Migrations
                     b.Property<string>("PickupCode")
                         .HasColumnType("text");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<bool>("RequirePickupCode")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
 
                     b.Property<decimal>("SubTotal")
                         .HasColumnType("numeric");
@@ -354,6 +356,33 @@ namespace CanteenAutomationApi.Migrations
                     b.HasKey("CouponId");
 
                     b.ToTable("Coupons");
+                });
+
+            modelBuilder.Entity("FAQ", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Answer")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Question")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("createdAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("isDeleted")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Faqs");
                 });
 
             modelBuilder.Entity("PaymentMethod", b =>

@@ -3,7 +3,7 @@ using System;
     {
         public int OrderId { get; set; }
         public DateTime OrderDate { get; set; }
-        public string Status { get; set; }= null!;
+        public int Status { get; set; }
         public decimal TotalAmount { get; set; }
 
         public decimal? Discount { get; set; }
@@ -11,6 +11,8 @@ using System;
         public string? PaymentStatus { get; set; }
         public int OrderType { get; set; }
         public string? PickupCode { get; set; }
+
+        public bool RequirePickupCode{get; set;}
 
         // User info
         public int UserId { get; set; }
@@ -30,8 +32,9 @@ public class OrderItemDto
 
 public class UpdateOrderRequest
 {
+     public required string  ApiKey{get; set;}
     public int OrderId { get; set; }
-    public string NewStatus { get; set; } = null!;
+    public int NewStatus { get; set; } = 0;
     public string? PickupCode { get; set; }
 }
 

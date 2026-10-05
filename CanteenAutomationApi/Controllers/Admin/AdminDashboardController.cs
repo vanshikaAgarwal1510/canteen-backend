@@ -29,10 +29,10 @@ public class AdminDashboardController : ControllerBase
     var totalOrders = todayOrders.Count();
 
     var cancelledOrders = todayOrders
-        .Count(o => o.Status == "Cancelled");
+        .Count(o => o.Status == 5);
 
     var todayRevenue = todayOrders
-        .Where(o => o.Status == "Completed")
+        .Where(o => o.Status == 4)
         .Sum(o => (decimal?)o.FinalAmount) ?? 0;
 
     var items = _db.OrderItems
@@ -42,7 +42,7 @@ public class AdminDashboardController : ControllerBase
         oi.Item != null &&
         oi.Item.Name != null &&
         oi.Order != null &&
-        oi.Order.Status == "Completed"
+        oi.Order.Status == 4
     )
     .GroupBy(oi => oi.Item!.Name)
     .Select(g => new
@@ -60,7 +60,7 @@ public class AdminDashboardController : ControllerBase
         .Where(o =>
             o.CreatedAt.Month == today.Month &&
             o.CreatedAt.Year == today.Year &&
-            o.Status == "Completed" 
+            o.Status == 4
             );
 
     var totalMonthlyOrders = monthlyOrders.Count();

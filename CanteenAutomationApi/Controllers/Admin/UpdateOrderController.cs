@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using CanteenBackend.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
+using CanteenBackend.Models;
 
 
 [Authorize(Roles ="Admin,Staff")]
@@ -13,11 +14,21 @@ public class OrdersController : ControllerBase
     private readonly AppDbContext _db;
     public OrdersController(AppDbContext db)
     {
-        _db = db;
+     _db = db;           
     }
     [HttpPost("update-status")]
-     public IActionResult UpdateOrderStatus(UpdateOrderRequest request)
+     public async Task<IActionResult> UpdateOrderStatusAsync(UpdateOrderRequest request)
 {
+  if (request.ApiKey != Constants.api)
+    {
+        return Unauthorized(new
+        {
+            status = 401,
+            message = "Invalid API key",
+            data = (object?)null
+        });
+    }
+
     var order = _db.Orders.FirstOrDefault(o => o.Id == request.OrderId);
     if (order == null)
     {
@@ -29,12 +40,12 @@ public class OrdersController : ControllerBase
         });
     }
 
-    var validTransitions = new Dictionary<string, List<string>>
+     var validTransitions = new Dictionary<int, List<int>>
     {
-        { "Pending", new List<string> { "Preparing" } },
-        { "Preparing", new List<string> { "Ready" } },
-        { "Ready", new List<string> { "Completed" } },
-        { "Completed", new List<string>() }
+     { 1, new List<int> { 2 } }, // Pending → Preparing
+     { 2, new List<int> { 3 } }, // Preparing → Ready
+     { 3, new List<int> { 4 } }, // Ready → Completed
+     { 4, new List<int>() }       // Completed
     };
 
     if (!validTransitions.ContainsKey(order.Status) ||
@@ -49,7 +60,7 @@ public class OrdersController : ControllerBase
     }
 
    
-    if (request.NewStatus == "Completed")
+    if (request.NewStatus == 4)
     {
         // Payment check
         var payment = _db.Payments.FirstOrDefault(p => p.OrderId == order.Id);
@@ -73,17 +84,20 @@ public class OrdersController : ControllerBase
                 data = (object?)null
             });
         }
-
-        if (string.IsNullOrEmpty(request.PickupCode) ||
-            order.PickupCode != request.PickupCode)
+                
+        if (order.RequirePickupCode)
         {
-            return BadRequest(new
+            if (string.IsNullOrWhiteSpace(request.PickupCode) ||
+                order.PickupCode != request.PickupCode.Trim())
             {
-                status = 400,
-                message = "Invalid pickup code",
-                data = (object?)null
-            });
-        }
+                return BadRequest(new
+                {
+                    status = 400,
+                    message = "Please enter pickup code to complete the order.",
+                    data = (object?)null
+                });
+            }
+        }  
 
         order.IsPickedUp = true; 
     }
@@ -106,6 +120,16 @@ public class OrdersController : ControllerBase
     [HttpPost("mark-payment-paid")]
     public IActionResult UpdatePaymentStatus([FromBody] UpdatePaymentStatusRequest request)
 {
+      if (request.ApiKey != Constants.api)
+    {
+        return Unauthorized(new
+        {
+            status = 401,
+            message = "Invalid API key",
+            data = (object?)null
+        });
+    }
+
     var payment = _db.Payments
         .FirstOrDefault(p => p.OrderId == request.OrderId);
 
@@ -143,7 +167,7 @@ public class OrdersController : ControllerBase
     }
 
     // Optional business rule
-    if (order.Status == "Completed")
+    if (order.Status == 4)
     {
         return BadRequest(new
         {
@@ -176,14 +200,133 @@ public class OrdersController : ControllerBase
         data = new
         {
             paymentId = payment.Id,
-            newStatus = payment.PaymentStatus
+            newStatus = payment.PaymentStatus,
+            paidAt = payment.PaidAt
+
         }
     });
 }
+    
+   [HttpPost("validate-pickup-code")]
+    public async Task<IActionResult> ValidatePickupCode( [FromBody] ValidatePickupCodeRequest request)
+    {
+       
+        if (request.ApiKey != Constants.api)
+        {
+            return Unauthorized(new
+            {
+                status = 401,
+                message = "Invalid API key",
+                data = (object?)null
+            });
+        }
+    
+       
+        var order = await _db.Orders
+               .FirstOrDefaultAsync(o => o.Id == request.OrderId);
+       
+           if (order == null)
+       {
+           return BadRequest(new
+           {
+               status = 400,
+               message = "Order not found",
+               data = (object?)null
+           });
+          }
+
+       
+       if (order.Status != 3)
+       {
+          return BadRequest(new
+              {
+               status = 400,
+               message = "Order is not ready for pickup.",
+               data = (object?)null
+           });
+       }
+   
+      
+     if (order.IsPickedUp)
+      {
+         return BadRequest(new
+          {
+               status = 400,
+               message = "Order already completed",
+             data = (object?)null
+          });
+     }
+
+  
+    var payment = await _db.Payments
+        .FirstOrDefaultAsync(p => p.OrderId == order.Id);
+
+    if (payment == null || payment.PaymentStatus != "Paid")
+    {
+        return BadRequest(new
+        {
+            status = 400,
+            message = "Payment pending. Order cannot be completed.",
+            data = (object?)null
+        });
     }
+
+    
+    if (order.RequirePickupCode)
+    {
+        if (string.IsNullOrWhiteSpace(request.PickupCode))
+        {
+            return BadRequest(new
+            {
+                status = 400,
+                message = "Pickup code is required.",
+                data = (object?)null
+            });
+        }
+
+        if (order.PickupCode != request.PickupCode.Trim())
+        {
+            return BadRequest(new
+            {
+                status = 400,
+                message = "Incorrect Pickup Code",
+                data = (object?)null
+            });
+        }
+    }
+
+  
+    order.Status = 4;
+    order.IsPickedUp = true;
+
+    await _db.SaveChangesAsync();
+
+    return Ok(new
+    {
+        status = 200,
+        message = order.RequirePickupCode
+            ? "Pickup code validated successfully."
+            : "Order completed successfully.",
+        data = new
+        {
+            status = order.Status,
+            isPickedUp = order.IsPickedUp
+        }
+    });
+} 
+        }
+
     public class UpdatePaymentStatusRequest
 {
+    public required string  ApiKey{get; set;}
     public int OrderId { get; set; }
 }
     
+    public class ValidatePickupCodeRequest
+{
+    public required string  ApiKey{get; set;}
+    public int OrderId { get; set; }
 
+    public required string PickupCode{get; set;}
+}
+    
