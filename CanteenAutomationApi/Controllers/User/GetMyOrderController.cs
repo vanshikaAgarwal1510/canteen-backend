@@ -19,8 +19,18 @@ public class GetMyOrderController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> GetOrders()
+    public async Task<IActionResult> GetOrders([FromBody] OrderRequest request)
     {
+        if (request.ApiKey != Constants.api)
+        {
+            return Unauthorized(new
+            {
+                status = 401,
+                message = "Invalid API key",
+                data = (object?)null
+            });
+        }       
+ 
          var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
          if(string.IsNullOrEmpty(userIdClaim)) 
              return Unauthorized(new
@@ -30,6 +40,20 @@ public class GetMyOrderController : ControllerBase
                  data = (object?)null
              });
          int userId = int.Parse(userIdClaim);
+
+          //list to get avg rating
+            var ratingList = await _db.Ratings
+            .GroupBy(r => r.MenuItemId)
+            .Select(g => new
+            {
+                MenuItemId = g.Key,
+                AvgRating = g.Average(r => (double)r.Stars),
+                RatingCount = g.Count()
+            })
+            .ToListAsync();
+
+        var ratingLookup = ratingList
+            .ToDictionary(x => x.MenuItemId);
 
         var orders = await _db.Orders
             .Where(o => o.UserId == userId)
@@ -55,7 +79,11 @@ public class GetMyOrderController : ControllerBase
                     ItemId = oi.ItemId,
                     ItemName = oi.Item!.Name,
                     Quantity = oi.Quantity,
-                    Price = oi.Price
+                    Price = oi.Price,
+                    ImageUrl =oi.Item.ImageUrl,
+                    AverageRating = ratingLookup.ContainsKey(oi.ItemId) ? Math.Round(ratingLookup[oi.ItemId].AvgRating, 1): 0
+                
+
                 }).ToList()
             })
             .ToListAsync();
@@ -71,6 +99,15 @@ public class GetMyOrderController : ControllerBase
    [HttpPost("details")]
     public async Task<IActionResult> GetOrderDetails([FromBody] OrderDetailsRequest request)
     {
+           if (request.ApiKey != Constants.api)
+        {
+            return Unauthorized(new
+            {
+                status = 401,
+                message = "Invalid API key",
+                data = (object?)null
+            });
+        }
          var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
          if(string.IsNullOrEmpty(userIdClaim)) 
              return Unauthorized(new
@@ -124,6 +161,12 @@ public class GetMyOrderController : ControllerBase
 }
 public class OrderDetailsRequest
 {
+     public required string ApiKey { get; set; }
     public int OrderId { get; set; }
+}
+public class OrderRequest
+{
+     public required string ApiKey { get; set; }
+
 }
 

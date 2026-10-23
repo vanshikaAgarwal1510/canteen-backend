@@ -7,6 +7,7 @@ public class OrderItem
     public decimal Price { get; set; }
 
 
+
     // Foreign keys
     public int OrderId { get; set; }
     public int ItemId { get; set; }

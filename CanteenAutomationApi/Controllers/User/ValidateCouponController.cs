@@ -20,6 +20,15 @@ public class VadilateCouponController : ControllerBase
 [HttpPost]
 public async Task<IActionResult> ValidateCoupon([FromBody] ValidateCouponRequest request)
 {
+       if (request.ApiKey != Constants.api)
+        {
+            return Unauthorized(new
+            {
+                status = 401,
+                message = "Invalid API key",
+                data = (object?)null
+            });
+        }
     if (request.Items == null || !request.Items.Any())
     {
         return BadRequest(new
@@ -154,6 +163,7 @@ public class OrderItemsRequest
 
 public class ValidateCouponRequest
 {
+     public required string ApiKey { get; set; }
     public List<OrderItemsRequest> Items { get; set; } = new();
     public string CouponCode { get; set; } = null!;
 }

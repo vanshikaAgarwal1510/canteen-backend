@@ -101,7 +101,7 @@ class MenuItemDto
     public string? ImageUrl { get; set; }
     public double AverageRating { get; set; }
     public int CategoryId { get; set; } 
-
+  
 
 }
 }

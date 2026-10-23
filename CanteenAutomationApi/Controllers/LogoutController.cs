@@ -36,6 +36,7 @@ public IActionResult Logout(LogoutRequest request)
         }
 
     dbUser.IsActive = false;
+    
     _db.SaveChanges();
 
 

@@ -7,6 +7,7 @@ public class PaymentMethod
    public string Description { get; set; } = string.Empty;
    public bool IsEnabled { get; set; } = true;
    public bool IsMethodDeletable { get; set; }= true;
+   public string? ImageUrl { get; set; }
      public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
 }

@@ -16,107 +16,7 @@ public class OrdersController : ControllerBase
     {
      _db = db;           
     }
-    [HttpPost("update-status")]
-     public async Task<IActionResult> UpdateOrderStatusAsync(UpdateOrderRequest request)
-{
-  if (request.ApiKey != Constants.api)
-    {
-        return Unauthorized(new
-        {
-            status = 401,
-            message = "Invalid API key",
-            data = (object?)null
-        });
-    }
 
-    var order = _db.Orders.FirstOrDefault(o => o.Id == request.OrderId);
-    if (order == null)
-    {
-        return NotFound(new
-        {
-            status = 404,
-            message = "Order not found",
-            data = (object?)null
-        });
-    }
-
-     var validTransitions = new Dictionary<int, List<int>>
-    {
-     { 1, new List<int> { 2 } }, // Pending → Preparing
-     { 2, new List<int> { 3 } }, // Preparing → Ready
-     { 3, new List<int> { 4 } }, // Ready → Completed
-     { 4, new List<int>() }       // Completed
-    };
-
-    if (!validTransitions.ContainsKey(order.Status) ||
-        !validTransitions[order.Status].Contains(request.NewStatus))
-    {
-        return BadRequest(new
-        {
-            status = 400,
-            message = "Invalid status transition",
-            data = (object?)null
-        });
-    }
-
-   
-    if (request.NewStatus == 4)
-    {
-        // Payment check
-        var payment = _db.Payments.FirstOrDefault(p => p.OrderId == order.Id);
-        if (payment == null || payment.PaymentStatus != "Paid")
-        {
-            return BadRequest(new
-            {
-                status = 400,
-                message = "Payment pending. Order cannot be completed.",
-                data = (object?)null
-            });
-        }
-
-        // Pickup code check
-        if (order.IsPickedUp)
-        {
-            return BadRequest(new
-            {
-                status = 400,
-                message = "Order already completed",
-                data = (object?)null
-            });
-        }
-                
-        if (order.RequirePickupCode)
-        {
-            if (string.IsNullOrWhiteSpace(request.PickupCode) ||
-                order.PickupCode != request.PickupCode.Trim())
-            {
-                return BadRequest(new
-                {
-                    status = 400,
-                    message = "Please enter pickup code to complete the order.",
-                    data = (object?)null
-                });
-            }
-        }  
-
-        order.IsPickedUp = true; 
-    }
-
-    order.Status = request.NewStatus;
-    _db.SaveChanges();
-
-    return Ok(new
-    {
-        status = 200,
-        message = "Order status updated successfully",
-        data = new
-        {
-            OrderId = order.Id,
-            NewStatus = order.Status
-        }
-    });
-}
-       
     [HttpPost("mark-payment-paid")]
     public IActionResult UpdatePaymentStatus([FromBody] UpdatePaymentStatusRequest request)
 {
@@ -207,7 +107,114 @@ public class OrdersController : ControllerBase
     });
 }
     
-   [HttpPost("validate-pickup-code")]
+
+    [HttpPost("update-status")]
+   public async Task<IActionResult> UpdateOrderStatusAsync(UpdateOrderRequest request)
+{
+    if (request.ApiKey != Constants.api)
+    {
+        return Unauthorized(new
+        {
+            status = 401,
+            message = "Invalid API key",
+            data = (object?)null
+        });
+    }
+
+    var order = await _db.Orders
+        .FirstOrDefaultAsync(o => o.Id == request.OrderId);
+
+    if (order == null)
+    {
+        return NotFound(new
+        {
+            status = 404,
+            message = "Order not found",
+            data = (object?)null
+        });
+    }
+
+    var validTransitions = new Dictionary<int, List<int>>
+    {
+        { 1, new List<int> { 2 } }, // Pending → Preparing
+        { 2, new List<int> { 3 } }, // Preparing → Ready
+        { 3, new List<int> { 4 } }, // Ready → Completed
+        { 4, new List<int>() }       // Completed
+    };
+
+    if (!validTransitions.ContainsKey(order.Status) ||
+        !validTransitions[order.Status].Contains(request.NewStatus))
+    {
+        return BadRequest(new
+        {
+            status = 400,
+            message = "Invalid status transition",
+            data = (object?)null
+        });
+    }
+
+    if (request.NewStatus == 4)
+    {
+        // Payment check
+        var payment = await _db.Payments
+            .FirstOrDefaultAsync(p => p.OrderId == order.Id);
+
+        if (payment == null || payment.PaymentStatus != "Paid")
+        {
+            return BadRequest(new
+            {
+                status = 400,
+                message = "Payment pending. Order cannot be completed.",
+                data = (object?)null
+            });
+        }
+
+        // Already completed check
+        if (order.IsPickedUp)
+        {
+            return BadRequest(new
+            {
+                status = 400,
+                message = "Order already completed",
+                data = (object?)null
+            });
+        }
+
+        // Pickup code check
+        if (order.RequirePickupCode)
+        {
+            if (string.IsNullOrWhiteSpace(request.PickupCode) ||
+                order.PickupCode != request.PickupCode.Trim())
+            {
+                return BadRequest(new
+                {
+                    status = 400,
+                    message = "Please enter pickup code to complete the order.",
+                    data = (object?)null
+                });
+            }
+        }
+
+        order.IsPickedUp = true;
+    }
+
+    order.Status = request.NewStatus;
+
+    await _db.SaveChangesAsync();
+
+    return Ok(new
+    {
+        status = 200,
+        message = "Order status updated successfully",
+        data = new
+        {
+            OrderId = order.Id,
+            NewStatus = order.Status
+        }
+    });
+}
+  
+    [HttpPost("validate-pickup-code")]
     public async Task<IActionResult> ValidatePickupCode( [FromBody] ValidatePickupCodeRequest request)
     {
        

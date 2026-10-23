@@ -21,6 +21,15 @@ public class RatingsController : ControllerBase
     [HttpPost]
     public IActionResult AddRating(AddRatingRequest request)
     {
+           if (request.ApiKey != Constants.api)
+        {
+            return Unauthorized(new
+            {
+                status = 401,
+                message = "Invalid API key",
+                data = (object?)null
+            });
+        }
          var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
          if(string.IsNullOrEmpty(userIdClaim)) 
              return Unauthorized(new
@@ -107,6 +116,7 @@ public class RatingsController : ControllerBase
     }
 }
 public class AddRatingRequest{
+     public required string ApiKey { get; set; }
     public int OrderId { get; set; }
     public int ItemId { get; set; }
     public int Stars { get; set; }  

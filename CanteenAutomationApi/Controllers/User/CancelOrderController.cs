@@ -21,6 +21,15 @@ public class CancelOrderController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CancelOrder(CancelOrderRequest request )
     {
+           if (request.ApiKey != Constants.api)
+        {
+            return Unauthorized(new
+            {
+                status = 401,
+                message = "Invalid API key",
+                data = (object?)null
+            });
+        }
          var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
          if(string.IsNullOrEmpty(userIdClaim)) 
              return Unauthorized(new
@@ -94,4 +103,5 @@ public class CancelOrderController : ControllerBase
 public class CancelOrderRequest
 {
     public int OrderId { get; set; }
+     public required string ApiKey { get; set; }
 }

@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 
-[Route("api/place-order")]
+[Route("api/")]
 [ApiController]
 public class PlaceOrderController : ControllerBase
 {
@@ -18,18 +18,18 @@ public class PlaceOrderController : ControllerBase
     }
 
     [Authorize(Roles = "User")]
-    [HttpPost]
-    public async Task<IActionResult> PlaceOrder([FromBody] PlaceOrderRequest request) 
-    {
+    [HttpPost("place-order")]
+    public async Task<IActionResult> PlaceOrder([FromBody] PlaceOrderRequest request)  {
+
         if (request.ApiKey != Constants.api)
-    {
-        return Unauthorized(new
         {
-            status = 401,
-            message = "An invalid API key was provided",
-            data = (object?)null
-        });
-    }
+            return Unauthorized(new
+            {
+                status = 401,
+                message = "An invalid API key was provided",
+                data = (object?)null
+            });
+        }
         if (request.Items == null || !request.Items.Any())
         {
             return BadRequest(new
@@ -76,33 +76,33 @@ public class PlaceOrderController : ControllerBase
         }
 
         //  2. Check Canteen Open/Closed
-  var now = DateTime.Now.TimeOfDay;
+        var now = DateTime.Now.TimeOfDay;
 
-bool isWithinTime;
+        bool isWithinTime;
 
-if (settings.OpeningTime <= settings.ClosingTime)   
-{
-    isWithinTime = now >= settings.OpeningTime &&
-                   now <= settings.ClosingTime;
-}
-else
-{
-    isWithinTime = now >= settings.OpeningTime ||
-                   now <= settings.ClosingTime;
-}
+        if (settings.OpeningTime <= settings.ClosingTime)
+        {
+            isWithinTime = now >= settings.OpeningTime &&
+                           now <= settings.ClosingTime;
+        }
+        else
+        {
+            isWithinTime = now >= settings.OpeningTime ||
+                           now <= settings.ClosingTime;
+        }
 
-bool isOpen = isWithinTime && settings.IsOpen;
+        bool isOpen = isWithinTime && settings.IsOpen;
 
 
-if (!isOpen)                                                                                                                                                     
-{
-    return BadRequest(new
-    {
-        status = 400,
-        message = "Canteen is currently closed",
-        data = (object?)null
-    });
-}
+        if (!isOpen)
+        {
+            return BadRequest(new
+            {
+                status = 400,
+                message = "Canteen is currently closed",
+                data = (object?)null
+            });
+        }
 
         //  3. Online Ordering Toggle
         if (!settings.IsOnlineOrderingEnabled)
@@ -253,7 +253,8 @@ if (!isOpen)
                     OrderId = order.Id,
                     ItemId = menuItem!.Id,
                     Quantity = item.Quantity,
-                    Price = menuItem.Price
+                    Price = menuItem.Price,
+                    
                 };
 
                 _db.OrderItems.Add(orderItem);
@@ -279,15 +280,23 @@ if (!isOpen)
             {
                 status = 200,
                 message = "Order placed successfully",
-                data = new
+                data = new OrderResponseDto
                 {
-                    orderId = order.Id,
-                    status = order.Status,
-                    subTotal = order.SubTotal,
-                    discount = order.Discount,
-                    totalAmount = order.FinalAmount,
-                    paymentStatus = payment.PaymentStatus,
-                    pickupCode = order.PickupCode
+                    OrderId = order.Id,
+                    Status = order.Status,
+                    SubTotal = order.SubTotal,
+                    Discount = order.Discount,
+                    TotalAmount = order.FinalAmount,
+                    PaymentStatus = payment.PaymentStatus,
+                    PickupCode = order.PickupCode,
+                    Items = order.Items.Select(oi => new OrderItemDto
+                {
+                    ItemId = oi.ItemId,
+                    ItemName = oi.Item!.Name,
+                    Quantity = oi.Quantity,
+                    Price = oi.Price,
+                    ImageUrl = oi.Item.ImageUrl
+                }).ToList()
                 }
             });
         }
@@ -296,6 +305,126 @@ if (!isOpen)
             await transaction.RollbackAsync();
             throw;
         }
+    }
+
+     [Authorize(Roles = "User")]
+    [HttpPost("check-order")]
+      public async Task<IActionResult> checkAvailablity([FromBody] CheckOrderRequest request)
+     {
+        if (request.ApiKey != Constants.api)
+        {
+            return Unauthorized(new
+            {
+                status = 401,
+                message = "An invalid API key was provided",
+                data = (object?)null
+            });
+        }
+        if (request.Items == null || !request.Items.Any())
+        {
+            return BadRequest(new
+            {
+                status = 400,
+                message = "Order must contain at least one item",
+                data = (object?)null
+            });
+        }
+
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!int.TryParse(userIdClaim, out int userId))
+        {
+            return Unauthorized(new
+            {
+                status = 401,
+                message = "Invalid user",
+                data = (object?)null
+            });
+        }
+
+        var user = await _db.Users.FindAsync(userId);
+        if (user == null)
+        {
+            return Unauthorized(new
+            {
+                status = 401,
+                message = "User does not exist",
+                data = (object?)null
+            });
+        }
+
+        // 1. Get Canteen Settings
+        var settings = await _db.Settings.FirstOrDefaultAsync();
+
+        if (settings == null)
+        {
+            return BadRequest(new
+            {
+                status = 400,
+                message = "Canteen settings not configured",
+                data = (object?)null
+            });
+        }
+
+        //  2. Check Canteen Open/Closed
+        var now = DateTime.Now.TimeOfDay;
+
+        bool isWithinTime;
+
+        if (settings.OpeningTime <= settings.ClosingTime)
+        {
+            isWithinTime = now >= settings.OpeningTime &&
+                           now <= settings.ClosingTime;
+        }
+        else
+        {
+            isWithinTime = now >= settings.OpeningTime ||
+                           now <= settings.ClosingTime;
+        }
+
+        bool isOpen = isWithinTime && settings.IsOpen;
+
+
+        if (!isOpen)
+        {
+            return BadRequest(new
+            {
+                status = 300,
+                message = "Canteen is currently closed",
+                data = (object?)null
+            });
+        }
+
+        //  3. Online Ordering Toggle
+        if (!settings.IsOnlineOrderingEnabled)
+        {
+            return BadRequest(new
+            {
+                status = 400,
+                message = "Online ordering is disabled",
+                data = (object?)null
+            });
+        }
+
+        //  4. Max Active Orders
+        var activeOrdersCount = await _db.Orders
+            .CountAsync(o => o.Status != 4 && o.Status != 5);
+
+        if (activeOrdersCount >= settings.MaxActiveOrders)
+        {
+            return BadRequest(new
+            {
+                status = 500,
+                message = "Too many active orders. Please try later.",
+                data = (object?)null
+            });
+        }
+
+         return Ok(new
+            {
+                status = 200,
+                message = "Order can be placed",
+                data = (object?)null
+            });
     }
 
     private string GeneratePickupCode()
@@ -308,13 +437,18 @@ public class PlaceOrderRequest
     public required string ApiKey { get; set; }
     public List<OrderItemRequest> Items { get; set; } = new();
     public int PaymentMethod { get; set; } // 1= cash, 2= phonepay, 3=paytm, 4=googlePay etc.
-     public int OrderType{get; set;} // 1= Dine-In, 2= Takeaway,
-     public string? CouponCode{get; set;}
+    public int OrderType { get; set; } // 1= Dine-In, 2= Takeaway,
+    public string? CouponCode { get; set; }
 
 }
-public class OrderItemRequest       
+public class OrderItemRequest
 {
     public int ItemId { get; set; }
     public int Quantity { get; set; }
 }
+public class CheckOrderRequest
+{
+    public required string ApiKey { get; set; }
+    public List<OrderItemRequest> Items { get; set; } = new();
 
+}

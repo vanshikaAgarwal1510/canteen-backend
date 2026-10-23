@@ -28,6 +28,10 @@ public class OrderItemDto
     public string ItemName { get; set; } = null!;
     public decimal Price { get; set; }
     public int Quantity { get; set; }
+    public string? ImageUrl { get; set; }
+    public double AverageRating { get; set; }
+
+
 }
 
 public class UpdateOrderRequest
@@ -36,6 +40,8 @@ public class UpdateOrderRequest
     public int OrderId { get; set; }
     public int NewStatus { get; set; } = 0;
     public string? PickupCode { get; set; }
+
+
 }
 
 
