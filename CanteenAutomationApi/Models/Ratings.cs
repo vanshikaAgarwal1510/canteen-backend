@@ -9,7 +9,7 @@ public class Rating
     public int OrderId { get; set; }
 
     [Range(1, 5)]
-    public int Stars { get; set; }   // 1 to 5
+    public double Stars { get; set; }   // 1 to 5
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

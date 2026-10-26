@@ -25,5 +25,6 @@ namespace CanteenBackend.Data
            public DbSet<PaymentMethod> PaymentMethods {get; set;}
 
             public DbSet<FAQ> Faqs {get; set;}
+            public DbSet<WalletTransaction> WalletTransactions { get; set; }
     }
 }

@@ -119,6 +119,6 @@ public class AddRatingRequest{
      public required string ApiKey { get; set; }
     public int OrderId { get; set; }
     public int ItemId { get; set; }
-    public int Stars { get; set; }  
+    public double Stars { get; set; }  
    
 }

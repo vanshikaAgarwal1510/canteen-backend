@@ -103,8 +103,18 @@ public class GetOrdersController : ControllerBase
 
     [Authorize(Roles ="Staff")]
     [HttpPost("active")]
-    public async Task<IActionResult> GetActiveOrders()
+    public async Task<IActionResult> GetActiveOrders(GetMenuRequest request)
     {
+           if (request.ApiKey != Constants.api)
+            {
+                return Unauthorized(new
+                {
+                    status = 401,
+                    message = "An invalid API key was provided",
+                    data = (object?)null
+                });
+            }
+
        var orders = await _db.Orders
     .Where(o => o.Status != 4 && o.Status != 5)
     .Include(o => o.User)
@@ -144,7 +154,7 @@ public class GetOrdersController : ControllerBase
         });
     }
 
-    [Authorize(Roles ="Admin")]
+    [Authorize(Roles ="Admin,Staff")]
         [HttpPost("details")]
     public async Task<IActionResult> GetOrderDetails([FromBody] OrderDetailsRequestDto request)
     {

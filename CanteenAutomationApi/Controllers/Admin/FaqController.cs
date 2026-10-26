@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 
 
-[Authorize(Roles = "Admin")]
 [ApiController]
 [Route("api/faq")]
 public class FaqController : ControllerBase
@@ -16,6 +15,7 @@ public class FaqController : ControllerBase
     {
         _db = db;
     }
+    [Authorize(Roles ="Admin,User")]
     [HttpPost("get-faqList")]
     public async Task<IActionResult> GetFaqList(GetFaqRequest request)
     {
@@ -53,6 +53,7 @@ public class FaqController : ControllerBase
         });
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPost("add-faq")]
     public async Task<IActionResult> AddEditFaq(AddEditFaqRequest request)
     {
@@ -148,7 +149,8 @@ public class FaqController : ControllerBase
         }
    
     }
-  
+   
+    [Authorize(Roles = "Admin")]
     [HttpPost("delete-faq")]
     public async Task<IActionResult> DeleteFaq([FromBody] DeleteFaqRequest request)
     {

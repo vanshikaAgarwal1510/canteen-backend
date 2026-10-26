@@ -1,3 +1,4 @@
+using System.Formats.Asn1;
 using System.Security.Claims;
 using CanteenBackend.Data;
 using CanteenBackend.Models;
@@ -210,6 +211,7 @@ public class PlaceOrderController : ControllerBase
             //  Wallet payment
             if (request.PaymentMethod == 5)
             {
+        
                 if (user.WalletBalance < totalAmount)
                 {
                     return BadRequest(new
@@ -219,8 +221,10 @@ public class PlaceOrderController : ControllerBase
                         data = (object?)null
                     });
                 }
-
+                
                 user.WalletBalance -= totalAmount;
+
+                
             }
 
             //  Create Order
@@ -241,6 +245,8 @@ public class PlaceOrderController : ControllerBase
             };
 
             _db.Orders.Add(order);
+
+    
             await _db.SaveChangesAsync();
 
             //  Order Items
@@ -273,6 +279,23 @@ public class PlaceOrderController : ControllerBase
 
             _db.Payments.Add(payment);
             await _db.SaveChangesAsync();
+
+            // Wallet transaction history
+            if (request.PaymentMethod == 5)
+            {
+                _db.WalletTransactions.Add(new WalletTransaction
+                {
+                    UserId = userId,
+                    Amount = totalAmount,
+                    Type = "Debit",
+                    Description = $"Paid for Order #{order.Id}",
+                    Status = "Success",
+                    ReferenceId = payment.Id.ToString(),
+                    CreatedAt = DateTime.UtcNow
+                });
+            
+                await _db.SaveChangesAsync();
+            }
 
             await transaction.CommitAsync();
 
