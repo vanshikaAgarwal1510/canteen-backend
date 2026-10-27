@@ -84,7 +84,7 @@ public class AdminDashboardController : ControllerBase
                 revenue = g.Sum(x => x.Quantity * x.Price)
             })
             .OrderByDescending(x => x.quantity)
-            .Take(10)
+            .Take(5)
             .ToListAsync();
 
         // Current month's boundaries in IST, converted to UTC

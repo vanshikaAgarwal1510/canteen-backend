@@ -67,7 +67,7 @@ builder.Services.AddAuthentication(options =>
 
 var app = builder.Build();
 
-app.UseCors("AllowFlutterWeb"); 
+app.UseCors("AllowFlutterWeb");
 
 app.UseStaticFiles();
 
@@ -88,14 +88,14 @@ using (var scope = app.Services.CreateScope())
 
     if (!db.Users.Any())
     {
-      
+
         db.Users.Add(new User
         {
             FullName = "Admin",
             Email = "admin@canteen.com",
             PasswordHash = PasswordHelper.Hash("1234"),
             RoleId = 1,
-            IsActive= true,
+            IsActive = true,
             WalletBalance = 0,
             IsUniversityStudent = false
         });

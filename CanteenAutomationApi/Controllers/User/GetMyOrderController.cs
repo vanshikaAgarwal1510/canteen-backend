@@ -136,6 +136,7 @@ public class GetMyOrderController : ControllerBase
                 Discount = o.Discount,
                 SubTotal = o.SubTotal,
                 PickupCode = o.IsPickedUp ? null : o.PickupCode, // Only show if picked up
+                RequirePickupCode =  o.IsPickedUp ? false : true,
 
                 UserId = o.User.Id,
                 UserName = o.User.FullName,
@@ -145,7 +146,9 @@ public class GetMyOrderController : ControllerBase
                     ItemId = oi.ItemId,
                     ItemName = oi.Item!.Name,
                     Quantity = oi.Quantity,
-                    Price = oi.Price
+                    Price = oi.Price,
+                    ImageUrl = oi.Item!.ImageUrl
+
                 }).ToList()
             })
             .FirstOrDefaultAsync();
